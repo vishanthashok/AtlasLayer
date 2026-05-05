@@ -1,0 +1,103 @@
+.mapWrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 8px;
+  background: radial-gradient(ellipse at center, #0d1117 0%, #06080d 100%);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.mapWrapper :global(.mapboxgl-canvas) {
+  outline: none;
+}
+
+.mapWrapper :global(.mapboxgl-ctrl-bottom-right),
+.mapWrapper :global(.mapboxgl-ctrl-bottom-left) {
+  display: none;
+}
+
+.controls {
+  position: absolute;
+  bottom: 16px;
+  right: 16px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  background: rgba(8, 12, 16, 0.92);
+  border: 1px solid rgba(74, 158, 255, 0.2);
+  border-radius: 4px;
+  padding: 4px;
+  backdrop-filter: blur(12px);
+}
+
+.controlBtn {
+  background: transparent;
+  border: none;
+  color: #c8d6e8;
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.controlBtn:hover {
+  background: rgba(74, 158, 255, 0.12);
+  color: #4a9eff;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.06);
+  margin: 2px 0;
+}
+
+.tooltip {
+  position: fixed;
+  pointer-events: none;
+  background: rgba(11, 15, 21, 0.95);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: #e6edf3;
+  font-size: 0.75rem;
+  z-index: 30;
+  backdrop-filter: blur(8px);
+  white-space: nowrap;
+}
+
+.tooltipName {
+  font-weight: 600;
+}
+
+.tooltipMeta {
+  color: #94a3b8;
+  font-size: 0.7rem;
+  margin-top: 2px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.missingToken {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #fc8d59;
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.loadingOverlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  color: #5a6478;
+  font-size: 0.8rem;
+  pointer-events: none;
+}

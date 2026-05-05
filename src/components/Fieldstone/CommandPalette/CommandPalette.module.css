@@ -1,0 +1,194 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(6px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 80px;
+  animation: fadeIn 0.15s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.palette {
+  width: 100%;
+  max-width: 620px;
+  background: #06090e;
+  border: 1px solid rgba(0, 229, 255, 0.25);
+  border-radius: 4px;
+  box-shadow: 0 0 0 1px rgba(0, 229, 255, 0.05), 0 32px 64px rgba(0, 0, 0, 0.8);
+  overflow: hidden;
+  animation: slideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
+  max-height: 560px;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Search Row */
+.searchRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.searchIcon {
+  color: #00e5ff;
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.searchInput {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #e6edf3;
+  font-size: 1rem;
+  font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: rgba(139, 148, 158, 0.5);
+}
+
+.escKey {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 2px 7px;
+  font-size: 0.7rem;
+  color: #8b949e;
+  font-family: inherit;
+}
+
+/* Results */
+.results {
+  overflow-y: auto;
+  flex: 1;
+  padding: 8px 0;
+}
+
+.results::-webkit-scrollbar { width: 4px; }
+.results::-webkit-scrollbar-track { background: transparent; }
+.results::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
+
+.empty {
+  padding: 32px 20px;
+  text-align: center;
+  color: #8b949e;
+  font-size: 0.9rem;
+}
+
+/* Groups */
+.group {
+  margin-bottom: 4px;
+}
+
+.groupLabel {
+  padding: 8px 20px 4px;
+  font-size: 0.62rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.12em;
+  color: rgba(0, 229, 255, 0.5);
+  font-weight: 700;
+}
+
+/* Items */
+.item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  color: #c9d1d9;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.1s;
+}
+
+.itemSelected {
+  background: rgba(0, 229, 255, 0.06);
+  color: #e6edf3;
+}
+
+.itemIcon {
+  color: #8b949e;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  width: 18px;
+}
+
+.itemSelected .itemIcon {
+  color: #00e5ff;
+}
+
+.itemContent {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.itemLabel {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: inherit;
+}
+
+.itemDesc {
+  font-size: 0.75rem;
+  color: #8b949e;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.itemCategory {
+  font-size: 0.65rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #8b949e;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Footer */
+.footer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 10px 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  font-size: 0.72rem;
+  color: #8b949e;
+}
+
+.footer kbd {
+  background: rgba(255, 255, 255, 0.07);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  padding: 1px 5px;
+  margin-right: 3px;
+  font-family: inherit;
+  font-size: 0.7rem;
+}

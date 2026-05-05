@@ -1,0 +1,164 @@
+.page {
+  min-height: 100vh;
+  background: #0b0f15;
+  color: #c8d6e8;
+  font-family: 'Inter', system-ui, sans-serif;
+  padding: 28px 22px 56px;
+}
+
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+.docTitle {
+  font-size: 0.68rem;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  font-weight: 700;
+  color: #4a9eff;
+  margin-bottom: 10px;
+}
+
+.addressHeader {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #f1f5f9;
+  margin: 0 0 28px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.errorBanner {
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: -12px 0 22px;
+}
+
+.hero {
+  padding-bottom: 22px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.heroOwner {
+  font-size: clamp(1.35rem, 4vw, 1.95rem);
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.02em;
+  line-height: 1.25;
+  margin-bottom: 12px;
+  min-height: 1.35em;
+}
+
+.heroValue {
+  font-size: clamp(1.55rem, 4.5vw, 2.15rem);
+  font-weight: 700;
+  color: #22d3a5;
+  letter-spacing: -0.03em;
+  line-height: 1.15;
+  min-height: 1.25em;
+}
+
+.mid {
+  margin-bottom: 24px;
+}
+
+.midGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 18px 20px;
+}
+
+.midCell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.midLabel {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #5a6478;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.midValue {
+  font-size: 0.92rem;
+  color: #e2e8f0;
+  font-weight: 500;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.82rem;
+}
+
+.sourcePill {
+  display: inline-flex;
+  align-self: flex-start;
+  font-size: 0.62rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 700;
+  padding: 5px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(74, 158, 255, 0.28);
+  color: #94a3b8;
+  background: rgba(74, 158, 255, 0.06);
+}
+
+.bottom {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.bottomLabel {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #5a6478;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+}
+
+.legalBlock {
+  margin: 0;
+  padding: 14px 14px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.72rem;
+  line-height: 1.55;
+  color: #94a3b8;
+  white-space: pre-wrap;
+  word-break: break-word;
+  min-height: 4.5rem;
+}
+
+.cadLink {
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: #4a9eff;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.cadLink:hover {
+  color: #7ab8ff;
+}
+
+.empty {
+  color: #3d5068;
+}
+
+.suspenseShell {
+  min-height: 50vh;
+}

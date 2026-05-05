@@ -1,0 +1,239 @@
+.mapWrapper {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  background: #080c10;
+}
+
+/* Top search bar */
+.topBar {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  right: 14px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+  max-width: 620px;
+}
+
+.searchForm {
+  display: flex;
+  flex: 1;
+  gap: 0;
+  border: 1px solid rgba(74, 158, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(8, 12, 16, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #c8d6e8;
+  padding: 9px 14px;
+  font-size: 0.8rem;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+  letter-spacing: 0.01em;
+}
+
+.input::placeholder { color: #3d4d63; }
+
+.searchBtn {
+  background: rgba(74, 158, 255, 0.12);
+  border: none;
+  border-left: 1px solid rgba(74, 158, 255, 0.15);
+  color: #4a9eff;
+  padding: 9px 14px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.searchBtn:hover { background: rgba(74, 158, 255, 0.2); }
+
+.coordForm {
+  display: flex;
+  gap: 0;
+  border: 1px solid rgba(74, 158, 255, 0.2);
+  border-radius: 4px;
+  overflow: hidden;
+  background: rgba(8, 12, 16, 0.92);
+  backdrop-filter: blur(12px);
+}
+
+.coordInput {
+  width: 80px;
+  background: transparent;
+  border: none;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  color: #94a3b8;
+  padding: 9px 10px;
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
+  outline: none;
+  text-align: center;
+}
+
+.coordInput::placeholder { color: #2d3a4a; }
+
+.coordBtn {
+  background: rgba(74, 158, 255, 0.1);
+  border: none;
+  color: #4a9eff;
+  padding: 9px 12px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.coordBtn:hover { background: rgba(74, 158, 255, 0.2); }
+
+/* Right-side zoom & view controls */
+.mapControls {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(8, 12, 16, 0.92);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 5px;
+  padding: 4px;
+  backdrop-filter: blur(12px);
+}
+
+.mapBtn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: #5a6478;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.mapBtn:hover {
+  background: rgba(74, 158, 255, 0.1);
+  color: #4a9eff;
+}
+
+.mapBtnActive {
+  background: rgba(74, 158, 255, 0.15);
+  color: #4a9eff;
+}
+
+.divider {
+  height: 1px;
+  background: rgba(255,255,255,0.07);
+  margin: 2px 4px;
+}
+
+/* Analyze button */
+.analyzeBtn {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #0f1f35;
+  border: 1px solid #4a9eff;
+  color: #4a9eff;
+  padding: 10px 24px;
+  border-radius: 4px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.analyzeBtn:hover:not(:disabled) {
+  background: #163052;
+  box-shadow: 0 0 18px rgba(74, 158, 255, 0.25);
+}
+
+.analyzingBtn {
+  border-color: #22d3a5;
+  color: #22d3a5;
+  animation: pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 rgba(34, 211, 165, 0); }
+  50% { box-shadow: 0 0 14px rgba(34, 211, 165, 0.3); }
+}
+
+/* Pin */
+.pinOuter {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: rgba(74, 158, 255, 0.2);
+  border: 1.5px solid #4a9eff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pingOut 1.8s ease-out infinite;
+}
+
+.pinInner {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #4a9eff;
+}
+
+@keyframes pingOut {
+  0% { box-shadow: 0 0 0 0 rgba(74, 158, 255, 0.4); }
+  70% { box-shadow: 0 0 0 8px rgba(74, 158, 255, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(74, 158, 255, 0); }
+}
+
+.mapCanvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+.mapBlockOverlay {
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(6, 9, 14, 0.92);
+  overflow: auto;
+}
+
+.missingToken {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #ef4444;
+  font-size: 0.9rem;
+}

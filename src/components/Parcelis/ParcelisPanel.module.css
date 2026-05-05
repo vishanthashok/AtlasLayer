@@ -1,0 +1,668 @@
+.panel {
+  padding: 20px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  background: #0b0f15;
+  min-height: 100%;
+  font-family: 'Inter', sans-serif;
+  color: #94a3b8;
+}
+
+/* Section headers */
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 18px 0 12px 0;
+}
+
+.sectionHeader:first-child { margin-top: 0; }
+
+.sectionTag {
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  color: #3d5068;
+  white-space: nowrap;
+  text-transform: uppercase;
+}
+
+.sectionLine {
+  flex: 1;
+  height: 1px;
+  background: rgba(255,255,255,0.05);
+}
+
+.exportBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(74, 158, 255, 0.1);
+  border: 1px solid rgba(74, 158, 255, 0.2);
+  color: #4a9eff;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.exportBtn:hover {
+  background: rgba(74, 158, 255, 0.2);
+  border-color: #4a9eff;
+}
+
+/* Empty state */
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 28px 16px;
+  gap: 10px;
+  background: rgba(255,255,255,0.02);
+  border: 1px dashed rgba(255,255,255,0.06);
+  border-radius: 4px;
+}
+
+.emptyIcon { color: #2d3a4a; }
+
+.emptyState p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #3d5068;
+  line-height: 1.5;
+}
+
+/* Parcel card */
+.parcelCard {
+  background: rgba(74, 158, 255, 0.04);
+  border: 1px solid rgba(74, 158, 255, 0.12);
+  border-radius: 4px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.parcelRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+}
+
+.parcelIcon { color: #4a9eff; margin-top: 1px; flex-shrink: 0; }
+
+.parcelAddress {
+  font-size: 0.95rem;
+  color: #c8d6e8;
+  line-height: 1.35;
+}
+
+.parcelMeta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: #3d5068;
+  font-family: 'JetBrains Mono', monospace;
+  margin-top: 2px;
+}
+
+.parcelSize {
+  color: #22d3a5;
+  font-weight: 600;
+}
+
+/* Loading state */
+.loadingBlock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: rgba(34, 211, 165, 0.04);
+  border: 1px solid rgba(34, 211, 165, 0.12);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  color: #22d3a5;
+  position: relative;
+  overflow: hidden;
+}
+
+.scanLine {
+  position: absolute;
+  left: 0; top: 0;
+  width: 3px; height: 100%;
+  background: #22d3a5;
+  animation: scan 1.5s ease-in-out infinite;
+}
+
+@keyframes scan {
+  0%, 100% { opacity: 0.3; transform: scaleY(0.5); }
+  50% { opacity: 1; transform: scaleY(1); }
+}
+
+.loadingIcon {
+  animation: spin 1.2s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Insight block */
+.insightBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.reasoningList {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.reasoningList li {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  font-size: 0.9rem;
+  color: #7a8fa8;
+  line-height: 1.4;
+}
+
+.chevron { color: #4a9eff; margin-top: 2px; flex-shrink: 0; }
+
+.constraintsBlock {
+  background: rgba(234, 179, 8, 0.04);
+  border: 1px solid rgba(234, 179, 8, 0.1);
+  border-radius: 4px;
+  padding: 10px 12px;
+}
+
+.constraintsHeader {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #b45309;
+  margin-bottom: 7px;
+}
+
+.constraintsBlock ul {
+  margin: 0;
+  padding-left: 14px;
+  font-size: 0.75rem;
+  color: #7a6a3a;
+}
+
+.tagRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.typeTag {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  padding: 3px 8px;
+  border: 1px solid;
+  border-radius: 3px;
+  text-transform: uppercase;
+  background: transparent;
+}
+
+/* View toggle */
+.viewToggle {
+  display: flex;
+  gap: 2px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.viewBtn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: none;
+  color: #3d5068;
+  padding: 4px 8px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+
+.viewBtnActive {
+  background: rgba(74, 158, 255, 0.15);
+  color: #4a9eff;
+}
+
+/* Model cards */
+.modelList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.modelCard {
+  display: flex;
+  gap: 12px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 4px;
+  padding: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.modelCard:hover {
+  background: rgba(74, 158, 255, 0.04);
+  border-color: rgba(74, 158, 255, 0.2);
+}
+
+.modelCardSelected {
+  background: rgba(74, 158, 255, 0.06);
+}
+
+/* Floor plan SVG thumb */
+.floorPlanSvg {
+  flex-shrink: 0;
+  border-radius: 3px;
+  display: block;
+}
+
+.modelLeft { flex-shrink: 0; }
+
+.modelRight {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.modelNameRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 6px;
+}
+
+.modelName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #c8d6e8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.modelStyleTag {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.modelDims {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: #3d5068;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Score bar */
+.scoreBarWrapper {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.scoreBarTrack {
+  flex: 1;
+  height: 3px;
+  background: rgba(255,255,255,0.06);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.scoreBarFill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}
+
+.scoreLabel {
+  font-size: 0.65rem;
+  font-weight: 700;
+  font-family: 'JetBrains Mono', monospace;
+  width: 28px;
+  text-align: right;
+}
+
+.modelDesc {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #3d5068;
+  line-height: 1.35;
+}
+
+.selectedChip {
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  border: 1px solid;
+  border-radius: 3px;
+  padding: 2px 7px;
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 4px;
+  text-transform: uppercase;
+}
+/* Error Card */
+.errorCard {
+  background: rgba(248, 81, 73, 0.05);
+  border: 1px solid rgba(248, 81, 73, 0.2);
+  border-radius: 4px;
+  padding: 14px;
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.errorHeader {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #f85149;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.errorCard p {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #c9d1d9;
+  line-height: 1.4;
+}
+
+.errorHint {
+  font-size: 0.65rem;
+  color: #8b949e;
+  font-style: italic;
+}
+
+/* ── Property Intelligence Card ──────────────────── */
+.propertyCard {
+  background: rgba(74, 158, 255, 0.04);
+  border: 1px solid rgba(74, 158, 255, 0.15);
+  border-radius: 4px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  position: relative;
+}
+
+.propertyCard::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0;
+  width: 3px; height: 100%;
+  background: #4a9eff;
+  box-shadow: 0 0 6px #4a9eff;
+}
+
+.propertyRow {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.propertyIcon { color: #4a9eff; margin-top: 1px; flex-shrink: 0; }
+
+.propertyAddress {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.propertyAddress strong {
+  font-size: 1rem;
+  color: #c8d6e8;
+  font-weight: 600;
+}
+
+.propertyAddress span {
+  font-size: 0.85rem;
+  color: #7a8fa8;
+}
+
+.propertyGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.propertyCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.05);
+  border-radius: 3px;
+  padding: 7px 9px;
+}
+
+.propertyCellLabel {
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.1em;
+  color: #3d5068;
+  text-transform: uppercase;
+}
+
+.propertyCell span:last-child {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.publicRecordsNote {
+  margin: 0;
+  font-size: 0.72rem;
+  color: #3d5068;
+  line-height: 1.45;
+  font-style: italic;
+}
+
+.ownerLookupBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(74, 158, 255, 0.25);
+  color: #4a9eff;
+  padding: 7px 12px;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s;
+  align-self: flex-start;
+}
+
+.ownerLookupBtn:hover {
+  background: rgba(74, 158, 255, 0.1);
+  border-color: #4a9eff;
+}
+
+/* Registry Section */
+.registrySection {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sectionHeaderSmall {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: #3d5068;
+  text-transform: uppercase;
+}
+
+.registryGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.registryItem {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.registryLabel {
+  font-size: 0.55rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #3d5068;
+}
+
+.registryValue {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+/* Market Intelligence */
+.marketIntelligence {
+  background: linear-gradient(135deg, rgba(74, 158, 255, 0.05) 0%, rgba(34, 211, 165, 0.05) 100%);
+  border: 1px solid rgba(74, 158, 255, 0.1);
+  border-radius: 4px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.investmentBadge {
+  margin-left: auto;
+  font-size: 0.55rem;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 3px;
+  background: rgba(34, 211, 165, 0.1);
+  color: #22d3a5;
+  border: 1px solid rgba(34, 211, 165, 0.2);
+}
+
+.investmentBadge[data-rating='AAA'],
+.investmentBadge[data-rating='AA'] {
+  background: rgba(34, 211, 165, 0.15);
+  color: #22d3a5;
+  box-shadow: 0 0 8px rgba(34, 211, 165, 0.2);
+}
+
+.marketGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.marketMetric {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.metricLabel {
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #4b5e78;
+  text-transform: uppercase;
+}
+
+.metricValue {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #c8d6e8;
+}
+
+.velocityRow {
+  height: 14px;
+  display: flex;
+  align-items: center;
+}
+
+.marketInsights {
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: #7a8fa8;
+  line-height: 1.4;
+  padding-top: 10px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.marketInsights strong {
+  color: #4a9eff;
+  font-weight: 600;
+}
+
+/* Data source badges */
+.dataSources {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.dataSourceLabel {
+  font-size: 0.58rem;
+  font-family: 'JetBrains Mono', monospace;
+  color: #3d5068;
+  letter-spacing: 0.1em;
+  margin-right: 2px;
+}
+
+.dataSourceBadge {
+  font-size: 0.62rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 2px 6px;
+  border-radius: 2px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #3d5068;
+}

@@ -1,0 +1,31 @@
+.wrap {
+  display: inline-flex;
+  gap: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid rgba(74, 158, 255, 0.35);
+  background: rgba(10, 24, 40, 0.95);
+}
+
+.pill {
+  padding: 6px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  color: #8ba3bc;
+  transition: background 0.15s, color 0.15s;
+}
+
+.pill:hover {
+  color: #e2e8f0;
+  background: rgba(74, 158, 255, 0.08);
+}
+
+.pillActive {
+  background: rgba(74, 158, 255, 0.22);
+  color: #7dd3fc;
+}

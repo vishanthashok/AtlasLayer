@@ -1,0 +1,139 @@
+.workspace {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: var(--background);
+}
+
+.header {
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  background-color: var(--surface-color);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.backLink {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #8b949e;
+  font-size: 0.9rem;
+  transition: color 0.2s;
+}
+
+.backLink:hover {
+  color: var(--foreground);
+}
+
+.titleBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-left: 16px;
+  margin-right: auto;
+}
+
+.titleBrand {
+  font-size: 0.65rem;
+  letter-spacing: 0.12em;
+  color: var(--foreground);
+  opacity: 0.45;
+  text-transform: uppercase;
+}
+
+.title {
+  font-weight: 700;
+  color: var(--product-fieldstone-accent, var(--warning-color));
+  letter-spacing: 0.06em;
+  font-size: 1rem;
+}
+
+.layerControls {
+  display: flex;
+  gap: 8px;
+  background-color: var(--background);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.layerBtn {
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all var(--transition-fast);
+}
+
+.layerBtn:hover {
+  color: var(--foreground);
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.layerBtn.active {
+  background-color: var(--surface-color);
+  color: var(--warning-color);
+  box-shadow: var(--shadow-sm);
+  border: 1px solid var(--border-color);
+}
+
+.content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.mapContainer {
+  flex: 0 0 70%;
+  position: relative;
+  border-right: 1px solid var(--border-color);
+}
+
+.panelContainer {
+  flex: 0 0 30%;
+  background-color: var(--surface-color);
+  overflow-y: auto;
+  position: relative;
+}
+
+.mapLoading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  background-color: var(--map-bg);
+  color: var(--foreground);
+  font-size: 1.2rem;
+  font-weight: 500;
+}
+
+/* Command Palette trigger button */
+.cmdBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  color: #8b949e;
+  padding: 6px 12px;
+  border-radius: 2px;
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  margin-left: 16px;
+  transition: all 0.2s;
+}
+
+.cmdBtn:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: rgba(0, 229, 255, 0.05);
+}
