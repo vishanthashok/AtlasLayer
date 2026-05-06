@@ -131,6 +131,7 @@ export function WorldHeatMap({ countries, onSelect, selectedIso }: Props) {
     pitch: 0,
     bearing: 0,
   });
+  const [mapStyleReady, setMapStyleReady] = useState(false);
 
   const byIsoA3 = useMemo(() => {
     const m = new Map<string, CountryRisk>();
@@ -202,7 +203,7 @@ export function WorldHeatMap({ countries, onSelect, selectedIso }: Props) {
   // Sync selected feature-state.
   useEffect(() => {
     const map = mapRef.current?.getMap();
-    if (!map) return;
+    if (!mapReadyForCountriesSource(map)) return;
     if (selectedIsoRef.current && selectedIsoRef.current !== selectedIso) {
       const prev = baseGeoJsonRef.current?.features.find(
         (f) => f.properties.ISO_A3 === selectedIsoRef.current
@@ -224,12 +225,12 @@ export function WorldHeatMap({ countries, onSelect, selectedIso }: Props) {
     } else {
       selectedIsoRef.current = null;
     }
-  }, [selectedIso, countries]);
+  }, [selectedIso, countries, mapStyleReady]);
 
   const handleMouseMove = useCallback(
     (e: MapMouseEvent) => {
       const map = mapRef.current?.getMap();
-      if (!map) return;
+      if (!mapReadyForCountriesSource(map)) return;
       const f = e.features?.[0];
       const prevIso = hoveredIsoRef.current;
       if (!f) {
@@ -278,7 +279,7 @@ export function WorldHeatMap({ countries, onSelect, selectedIso }: Props) {
 
   const handleMouseLeave = useCallback(() => {
     const map = mapRef.current?.getMap();
-    if (!map) return;
+    if (!mapReadyForCountriesSource(map)) return;
     if (hoveredIsoRef.current) {
       const prev = baseGeoJsonRef.current?.features.find(
         (ff) => ff.properties.ISO_A3 === hoveredIsoRef.current
@@ -319,7 +320,7 @@ export function WorldHeatMap({ countries, onSelect, selectedIso }: Props) {
       pitch: 0,
       bearing: 0,
     }));
-    mapRef.current?.getMap().easeTo({
+    mapRef.current?.getMap()?.easeTo({
       center: [20, 20],
       zoom: 1.4,
       pitch: 0,
@@ -357,6 +358,7 @@ export function WorldHeatMap({ countries, onSelect, selectedIso }: Props) {
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         onClick={handleClick}
+        onLoad={() => setMapStyleReady(true)}
       >
         <Source id="countries" type="geojson" data={geoJson ?? EMPTY_FEATURE_COLLECTION}>
           <Layer {...FILL_LAYER} />
