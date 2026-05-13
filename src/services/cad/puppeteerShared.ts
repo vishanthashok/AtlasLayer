@@ -56,105 +56,130 @@ export async function waitForRegistryContent(page: Page, timeoutMs = 9000): Prom
  */
 export async function parseCadDetailPage(page: Page): Promise<ParsedCadPage> {
   const url = page.url();
-  const result = await page.evaluate(() => {
-    const norm = (s: string) => s.replace(/\s+/g, ' ').trim();
-    const stripColon = (s: string) => s.replace(/:\s*$/, '').trim();
-    const lc = (s: string) => stripColon(norm(s)).toLowerCase();
+  const result = (await page.evaluate(`
+    (() => {
+      const norm = (s) => s.replace(/\\s+/g, ' ').trim();
+      const stripColon = (s) => s.replace(/:\\s*$/, '').trim();
+      const lc = (s) =>
+        stripColon(norm(s))
+          .replace(/^[^a-z0-9]+/i, '')
+          .toLowerCase();
 
-    const OWNER = ['owner name', 'owner', 'owner(s)', 'property owner'];
-    const VALUE = [
-      'appraised value',
-      'total appraised value',
-      'market value',
-      'total market value',
-      'total value',
-    ];
-    const LEGAL = ['legal description', 'legal desc', 'legal'];
-    const PARCEL = [
-      'property id',
-      'account',
-      'account #',
-      'account number',
-      'geographic id',
-      'geo id',
-      'quick ref id',
-    ];
-    const UPDATED = ['last updated', 'certified values', 'tax year'];
+      const OWNER = ['owner name', 'owner', 'owner(s)', 'property owner', 'name'];
+      const APPRAISED_VALUE = [
+        'appraised value',
+        'total appraised value',
+      ];
+      const FALLBACK_VALUE = [
+        'market value',
+        'total market value',
+        'total value',
+      ];
+      const LEGAL = ['legal description', 'legal desc', 'legal'];
+      const PARCEL = [
+        'property id',
+        'account',
+        'account #',
+        'account number',
+        'geographic id',
+        'geo id',
+        'quick ref id',
+      ];
+      const UPDATED = ['last updated', 'database last updated on', 'certified values', 'tax year'];
 
-    const ALL = new Set<string>([...OWNER, ...VALUE, ...LEGAL, ...PARCEL, ...UPDATED]);
+      const ALL = new Set([
+        ...OWNER,
+        ...APPRAISED_VALUE,
+        ...FALLBACK_VALUE,
+        ...LEGAL,
+        ...PARCEL,
+        ...UPDATED,
+      ]);
 
-    let ownerName: string | null = null;
-    let appraisedValue: number | null = null;
-    let parcelId: string | null = null;
-    let legalDescription: string | null = null;
-    let lastUpdated: string | null = null;
+      let ownerName = null;
+      let appraisedValue = null;
+      let hasPreferredAppraisedValue = false;
+      let parcelId = null;
+      let legalDescription = null;
+      let lastUpdated = null;
 
-    const toInt = (raw: string | null | undefined): number | null => {
-      if (!raw) return null;
-      const cleaned = String(raw).replace(/[^0-9.-]+/g, '');
-      if (!cleaned) return null;
-      const n = parseInt(cleaned, 10);
-      return Number.isFinite(n) ? n : null;
-    };
+      const toInt = (raw) => {
+        if (!raw) return null;
+        const cleaned = String(raw).replace(/[^0-9.-]+/g, '');
+        if (!cleaned) return null;
+        const n = parseInt(cleaned, 10);
+        return Number.isFinite(n) ? n : null;
+      };
+      const looksLikeDate = (raw) =>
+        /\\d{4}-\\d{2}-\\d{2}/.test(raw) ||
+        /\\d{1,2}\\/\\d{1,2}\\/\\d{2,4}/.test(raw) ||
+        /[A-Za-z]+\\s+\\d{1,2},?\\s+\\d{4}/.test(raw) ||
+        /^\\s*\\d{4}\\s*$/.test(raw);
 
-    const labelNodes = Array.from(document.querySelectorAll('th, td, dt'));
-    for (const node of labelNodes) {
-      const raw = norm(node.textContent || '');
-      if (!raw) continue;
+      const labelNodes = Array.from(document.querySelectorAll('th, td, dt'));
+      for (const node of labelNodes) {
+        const raw = norm(node.textContent || '');
+        if (!raw) continue;
 
-      // Support same-cell "Label: Value" pattern
-      let labelText = raw;
-      let inCellValue: string | null = null;
-      const colonIdx = raw.indexOf(':');
-      if (colonIdx > 0 && colonIdx < raw.length - 1) {
-        labelText = raw.slice(0, colonIdx);
-        inCellValue = raw.slice(colonIdx + 1).trim();
+        let labelText = raw;
+        let inCellValue = null;
+        const colonIdx = raw.indexOf(':');
+        if (colonIdx > 0 && colonIdx < raw.length - 1) {
+          labelText = raw.slice(0, colonIdx);
+          inCellValue = raw.slice(colonIdx + 1).trim();
+        }
+
+        const L = lc(labelText);
+        if (!ALL.has(L)) continue;
+
+        let val = inCellValue;
+        if (!val) {
+          const sib = node.nextElementSibling;
+          val = sib ? norm(sib.textContent || '') : null;
+        }
+        if (!val) continue;
+
+        if (OWNER.includes(L) && !ownerName) {
+          ownerName = val;
+        } else if (APPRAISED_VALUE.includes(L)) {
+          const n = toInt(val);
+          if (n != null) {
+            appraisedValue = n;
+            hasPreferredAppraisedValue = true;
+          }
+        } else if (FALLBACK_VALUE.includes(L) && appraisedValue == null && !hasPreferredAppraisedValue) {
+          appraisedValue = toInt(val);
+        } else if (LEGAL.includes(L) && !legalDescription) {
+          legalDescription = val;
+        } else if (PARCEL.includes(L) && !parcelId) {
+          parcelId = val;
+        } else if (UPDATED.includes(L) && !lastUpdated && looksLikeDate(val)) {
+          lastUpdated = val;
+        }
       }
 
-      const L = lc(labelText);
-      if (!ALL.has(L)) continue;
+      const missing = [];
+      if (!ownerName) missing.push('ownerName');
+      if (appraisedValue == null) missing.push('appraisedValue');
+      if (!parcelId) missing.push('parcelId');
+      if (!legalDescription) missing.push('legalDescription');
+      if (!lastUpdated) missing.push('lastUpdated');
 
-      let val: string | null = inCellValue;
-      if (!val) {
-        const sib = node.nextElementSibling;
-        val = sib ? norm(sib.textContent || '') : null;
-      }
-      if (!val) continue;
+      const htmlSnippet = (document.body?.innerText || '').slice(0, 400);
 
-      if (OWNER.includes(L) && !ownerName) {
-        ownerName = val;
-      } else if (VALUE.includes(L) && appraisedValue == null) {
-        appraisedValue = toInt(val);
-      } else if (LEGAL.includes(L) && !legalDescription) {
-        legalDescription = val;
-      } else if (PARCEL.includes(L) && !parcelId) {
-        parcelId = val;
-      } else if (UPDATED.includes(L) && !lastUpdated) {
-        lastUpdated = val;
-      }
-    }
-
-    const missing: string[] = [];
-    if (!ownerName) missing.push('ownerName');
-    if (appraisedValue == null) missing.push('appraisedValue');
-    if (!parcelId) missing.push('parcelId');
-    if (!legalDescription) missing.push('legalDescription');
-    if (!lastUpdated) missing.push('lastUpdated');
-
-    const htmlSnippet = (document.body?.innerText || '').slice(0, 400);
-
-    return {
-      fields: {
-        ownerName,
-        appraisedValue,
-        parcelId,
-        legalDescription,
-        lastUpdated,
-      },
-      missing,
-      htmlSnippet,
-    };
-  });
+      return {
+        fields: {
+          ownerName,
+          appraisedValue,
+          parcelId,
+          legalDescription,
+          lastUpdated,
+        },
+        missing,
+        htmlSnippet,
+      };
+    })()
+  `)) as { fields: ParsedCadFields; missing: string[]; htmlSnippet: string };
 
   if (result.missing.length > 0) {
     console.warn('[CAD parser] Missing fields', {
