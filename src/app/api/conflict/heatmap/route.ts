@@ -8,6 +8,7 @@ import {
   type CountryRowDb,
   type LatestScoreRowDb,
 } from '../../../../lib/conflict/heatmapMerge';
+import { MOCK_COUNTRIES } from '../../../../lib/conflict/mockData';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -40,12 +41,20 @@ export async function GET(req: Request) {
 
   const { client: supabase, used_anon_fallback } = getConflictReadSupabase();
   if (!supabase) {
-    return NextResponse.json(
-      emptyPayload({
-        error: 'supabase_unconfigured',
-        hint: HINT_SUPABASE,
-      })
+    // Return mock data so the UI always renders — Supabase not configured
+    const filtered = MOCK_COUNTRIES.filter(c =>
+      (!region || c.region === region) &&
+      c.composite_score >= minScore &&
+      c.composite_score <= maxScore &&
+      (level == null || c.state_dept_level === level)
     );
+    return NextResponse.json({
+      countries: filtered,
+      generated_at: new Date().toISOString(),
+      total_countries: filtered.length,
+      cache_ttl_seconds: CACHE_TTL,
+      mock: true,
+    } satisfies ConflictHeatMapResponse & { mock: boolean });
   }
 
   const cacheVersion = (await cacheGet<string>('conflict:cache_version')) ?? '0';
@@ -56,14 +65,33 @@ export async function GET(req: Request) {
     return NextResponse.json(cached);
   }
 
-  const [countriesRes, scoresRes] = await Promise.all([
-    supabase.from('countries').select('iso_a2, iso_a3, name, region'),
-    supabase
-      .from('latest_conflict_scores')
-      .select(
-        'country_iso, composite_score, state_dept_level, news_conflict_score, social_signal_score, confidence, scored_at, data_sources'
-      ),
-  ]);
+  let countriesRes;
+  let scoresRes;
+  try {
+    [countriesRes, scoresRes] = await Promise.all([
+      supabase.from('countries').select('iso_a2, iso_a3, name, region'),
+      supabase
+        .from('latest_conflict_scores')
+        .select(
+          'country_iso, composite_score, state_dept_level, news_conflict_score, social_signal_score, confidence, scored_at, data_sources'
+        ),
+    ]);
+  } catch (networkErr) {
+    console.error('[heatmap] network error — falling back to mock data', networkErr);
+    const filtered = MOCK_COUNTRIES.filter(c =>
+      (!region || c.region === region) &&
+      c.composite_score >= minScore &&
+      c.composite_score <= maxScore &&
+      (level == null || c.state_dept_level === level)
+    );
+    return NextResponse.json({
+      countries: filtered,
+      generated_at: new Date().toISOString(),
+      total_countries: filtered.length,
+      cache_ttl_seconds: CACHE_TTL,
+      mock: true,
+    });
+  }
 
   if (countriesRes.error) {
     console.error('[heatmap] countries query failed', countriesRes.error);

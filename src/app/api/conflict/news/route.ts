@@ -3,6 +3,7 @@ import { getConflictReadSupabase } from '../../../../lib/conflict/supabase';
 import { conflictSchemaMissingHint, isConflictSchemaMissingError } from '../../../../lib/conflict/supabaseErrors';
 import { cacheGet, cacheSet } from '../../../../lib/property-intelligence/cache';
 import type { ConflictNewsApiResponse, NewsSignal } from '../../../../lib/conflict/types';
+import { MOCK_NEWS } from '../../../../lib/conflict/mockData';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -38,12 +39,10 @@ export async function GET(req: Request) {
 
   const { client: supabase, used_anon_fallback } = getConflictReadSupabase();
   if (!supabase) {
-    const body: ConflictNewsApiResponse = {
-      articles: [],
-      error: 'supabase_unconfigured',
-      hint: HINT_SUPABASE,
-    };
-    return NextResponse.json(body);
+    const articles = countryIso
+      ? MOCK_NEWS.filter(a => a.country_iso === countryIso.toUpperCase())
+      : MOCK_NEWS;
+    return NextResponse.json({ articles: articles.slice(0, limit), mock: true } as ConflictNewsApiResponse & { mock: boolean });
   }
 
   const cacheKey = `conflict:news:${NEWS_CACHE_NS}:${countryIso ?? '*'}:${limit}:${used_anon_fallback ? 'anon' : 'srv'}`;
@@ -61,7 +60,19 @@ export async function GET(req: Request) {
 
   if (countryIso) query = query.eq('country_iso', countryIso.toUpperCase());
 
-  const { data, error } = await query;
+  let data: unknown[] | null = null;
+  let error: { code?: string; message?: string } | null = null;
+  try {
+    const res = await query;
+    data = res.data;
+    error = res.error;
+  } catch (networkErr) {
+    console.error('[news] network error — falling back to mock', networkErr);
+    const articles = countryIso
+      ? MOCK_NEWS.filter(a => a.country_iso === countryIso.toUpperCase())
+      : MOCK_NEWS;
+    return NextResponse.json({ articles: articles.slice(0, limit), mock: true });
+  }
   if (error) {
     console.error('[news] query failed', error);
     if (isConflictSchemaMissingError(error)) {

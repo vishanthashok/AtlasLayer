@@ -1,11 +1,18 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
-/**
- * Server-only Supabase client using the service-role key.
- * Never import this from client components — service role bypasses RLS.
- */
 let cachedClient: SupabaseClient | null = null;
 let cachedAnonClient: SupabaseClient | null = null;
+
+function isValidSupabaseUrl(url: string | undefined): boolean {
+  if (!url) return false;
+  try {
+    const u = new URL(url);
+    // Must be HTTPS and a real Supabase project URL (not "undefined" or localhost in prod)
+    return u.protocol === 'https:' && u.hostname.length > 4;
+  } catch {
+    return false;
+  }
+}
 
 export function getSupabaseAdmin(): SupabaseClient {
   if (cachedClient) return cachedClient;
@@ -13,47 +20,37 @@ export function getSupabaseAdmin(): SupabaseClient {
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!url) {
-    throw new Error(
-      'ConflictLens: SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL is not set'
-    );
+  if (!isValidSupabaseUrl(url)) {
+    throw new Error('ConflictLens: SUPABASE_URL is missing or invalid. Set NEXT_PUBLIC_SUPABASE_URL in your environment.');
   }
-  if (!key) {
-    throw new Error(
-      'ConflictLens: SUPABASE_SERVICE_ROLE_KEY is not set (server-only secret required)'
-    );
+  if (!key || key.length < 20) {
+    throw new Error('ConflictLens: SUPABASE_SERVICE_ROLE_KEY is missing. Set it in your environment.');
   }
 
-  cachedClient = createClient(url, key, {
+  cachedClient = createClient(url!, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    global: {
+      headers: { 'x-application-name': 'atlaslayer-conflictlens' },
+    },
   });
   return cachedClient;
 }
 
-/** Returns null if Supabase env vars are absent (lets routes return graceful errors). */
 export function tryGetSupabaseAdmin(): SupabaseClient | null {
-  try {
-    return getSupabaseAdmin();
-  } catch {
-    return null;
-  }
+  try { return getSupabaseAdmin(); } catch { return null; }
 }
 
-/** Read-only client for GET routes when service role is unavailable (anon SELECT must be granted in schema). */
 export function tryGetSupabaseAnon(): SupabaseClient | null {
   if (cachedAnonClient) return cachedAnonClient;
   const url = process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
   const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  cachedAnonClient = createClient(url, key, {
+  if (!isValidSupabaseUrl(url) || !key || key.length < 20) return null;
+  cachedAnonClient = createClient(url!, key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   return cachedAnonClient;
 }
 
-/**
- * Prefer service-role (full access); fall back to anon for read-only ConflictLens GET handlers.
- */
 export function getConflictReadSupabase(): {
   client: SupabaseClient | null;
   used_anon_fallback: boolean;

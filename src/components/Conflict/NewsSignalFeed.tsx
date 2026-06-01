@@ -1,225 +1,203 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { Star, ExternalLink, Filter } from 'lucide-react';
 import type { ConflictNewsApiResponse, NewsSignal } from '../../lib/conflict/types';
-import { scoreToColor } from './colors';
+import { useWatchlistStore } from '../../store/useWatchlistStore';
+import styles from './NewsSignalFeed.module.css';
 
 interface Props {
   countryIso?: string | null;
   refreshKey?: number;
 }
 
+type SeverityLevel = 'CRITICAL' | 'HIGH' | 'MODERATE' | 'LOW';
+type SourceType = 'OSINT' | 'HUMAN' | 'SATELLITE' | 'SIGINT';
+
 function relativeTime(iso: string | null): string {
   if (!iso) return '';
   const t = Date.parse(iso);
   if (!Number.isFinite(t)) return '';
-  const seconds = Math.floor((Date.now() - t) / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
+  const s = Math.floor((Date.now() - t) / 1000);
+  if (s < 60) return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  if (s < 86400) return `${Math.floor(s / 3600)}h ago`;
+  return `${Math.floor(s / 86400)}d ago`;
 }
 
-function sentimentLabel(score: number | null): { label: string; color: string } {
-  if (score == null) return { label: 'Neutral', color: '#5a6478' };
-  if (score < -0.3) return { label: 'Negative', color: '#fc8d59' };
-  if (score < 0) return { label: 'Tense', color: '#fee08b' };
-  if (score < 0.3) return { label: 'Neutral', color: '#94a3b8' };
-  return { label: 'Positive', color: '#22d3a5' };
+function getSeverity(conflictScore: number | null, sentimentScore: number | null): SeverityLevel {
+  const cs = conflictScore ?? 0;
+  const ss = Math.abs(sentimentScore ?? 0);
+  const combined = cs * 0.7 + ss * 0.3;
+  if (combined >= 0.85) return 'CRITICAL';
+  if (combined >= 0.65) return 'HIGH';
+  if (combined >= 0.40) return 'MODERATE';
+  return 'LOW';
 }
+
+function getSourceType(sourceName: string | null): SourceType {
+  const s = (sourceName ?? '').toLowerCase();
+  if (s.includes('satellite') || s.includes('planet') || s.includes('maxar')) return 'SATELLITE';
+  if (s.includes('sigint') || s.includes('nsa') || s.includes('gchq')) return 'SIGINT';
+  if (s.includes('reuters') || s.includes('ap') || s.includes('bbc') ||
+      s.includes('al jazeera') || s.includes('voa')) return 'OSINT';
+  return 'OSINT';
+}
+
+const SEVERITY_STYLES: Record<SeverityLevel, { bg: string; color: string; border: string }> = {
+  CRITICAL: { bg: 'rgba(255, 59, 59, 0.12)', color: '#ff3b3b', border: 'rgba(255, 59, 59, 0.4)' },
+  HIGH:     { bg: 'rgba(255, 140, 0, 0.10)',  color: '#ff8c00', border: 'rgba(255, 140, 0, 0.35)' },
+  MODERATE: { bg: 'rgba(255, 204, 0, 0.08)',  color: '#ffcc00', border: 'rgba(255, 204, 0, 0.3)' },
+  LOW:      { bg: 'rgba(34, 211, 165, 0.06)', color: '#22d3a5', border: 'rgba(34, 211, 165, 0.25)' },
+};
+
+const SOURCE_COLORS: Record<SourceType, string> = {
+  OSINT:     '#00d4ff',
+  HUMAN:     '#a78bfa',
+  SATELLITE: '#22d3a5',
+  SIGINT:    '#f59e0b',
+};
 
 export function NewsSignalFeed({ countryIso, refreshKey }: Props) {
   const [articles, setArticles] = useState<NewsSignal[]>([]);
   const [loading, setLoading] = useState(false);
-  const [apiError, setApiError] = useState<string | null>(null);
-  const [apiHint, setApiHint] = useState<string | null>(null);
-  const [emptyFeedHint, setEmptyFeedHint] = useState<string | null>(null);
+  const [filterText, setFilterText] = useState('');
+  const [filterSeverity, setFilterSeverity] = useState<SeverityLevel | 'ALL'>('ALL');
+  const { watchedIsos, addToWatchlist } = useWatchlistStore();
 
   useEffect(() => {
     let cancelled = false;
-    async function load() {
-      setLoading(true);
-      setApiError(null);
-      setApiHint(null);
-      setEmptyFeedHint(null);
-      try {
-        const params = new URLSearchParams();
-        if (countryIso) params.set('country_iso', countryIso);
-        params.set('limit', '60');
-        const resp = await fetch(`/api/conflict/news?${params.toString()}`);
-        const data = (await resp.json()) as ConflictNewsApiResponse;
-        if (!cancelled) {
-          setArticles(data.articles ?? []);
-          setApiError(data.error ?? null);
-          setApiHint(data.hint ?? null);
-          setEmptyFeedHint(data.empty_feed_hint ?? null);
-        }
-      } catch (e) {
-        console.warn('[news feed] fetch failed', e);
-        if (!cancelled) {
-          setArticles([]);
-          setApiError('news_fetch_failed');
-          setApiHint(e instanceof Error ? e.message : String(e));
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    load();
-    return () => {
-      cancelled = true;
-    };
+    setLoading(true);
+    const params = new URLSearchParams();
+    if (countryIso) params.set('country_iso', countryIso);
+    params.set('limit', '60');
+    fetch(`/api/conflict/news?${params}`)
+      .then(r => r.json() as Promise<ConflictNewsApiResponse>)
+      .then(data => { if (!cancelled) setArticles(data.articles ?? []); })
+      .catch(() => { if (!cancelled) setArticles([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
   }, [countryIso, refreshKey]);
 
+  const filtered = articles.filter(a => {
+    const sev = getSeverity(a.conflict_score, a.sentiment_score);
+    if (filterSeverity !== 'ALL' && sev !== filterSeverity) return false;
+    if (filterText) {
+      const t = filterText.toLowerCase();
+      return a.title.toLowerCase().includes(t) ||
+        (a.source_name ?? '').toLowerCase().includes(t) ||
+        (a.country_iso ?? '').toLowerCase().includes(t);
+    }
+    return true;
+  });
+
   return (
-    <div
-      style={{
-        background: 'rgba(11, 15, 21, 0.6)',
-        border: '1px solid rgba(255,255,255,0.05)',
-        borderRadius: 8,
-        overflow: 'hidden',
-        display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-      }}
-    >
-      <div
-        style={{
-          padding: '10px 14px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-        }}
-      >
-        <h3
-          style={{
-            margin: 0,
-            fontSize: '0.7rem',
-            letterSpacing: '0.16em',
-            textTransform: 'uppercase',
-            color: '#94a3b8',
-          }}
-        >
-          Live News Feed {countryIso ? `· ${countryIso}` : ''}
-        </h3>
-        <span style={{ fontSize: '0.7rem', color: '#5a6478' }}>
-          {loading ? 'Loading…' : `${articles.length} items`}
-        </span>
+    <div className={styles.container}>
+      <div className={styles.header}>
+        <div className={styles.headerLeft}>
+          <span className={styles.title}>THREAT INTELLIGENCE FEED</span>
+          {countryIso && <span className={styles.countryPill}>{countryIso}</span>}
+        </div>
+        <span className={styles.count}>{loading ? '…' : `${filtered.length} signals`}</span>
       </div>
-      <div style={{ flex: 1, overflow: 'auto' }}>
-        {apiError && !loading && (
-          <div
-            style={{
-              padding: 16,
-              margin: 12,
-              borderRadius: 6,
-              border: '1px solid rgba(252, 141, 89, 0.4)',
-              background: 'rgba(45, 20, 12, 0.75)',
-              color: '#fde6cf',
-              fontSize: '0.82rem',
-              lineHeight: 1.45,
-            }}
-          >
-            <div style={{ fontWeight: 600, marginBottom: 6 }}>
-              {apiError === 'supabase_unconfigured'
-                ? 'News feed: Supabase not configured'
-                : apiError === 'conflict_schema_missing'
-                  ? 'News feed: tables not created yet'
-                  : apiError === 'news_query_failed'
-                    ? 'News feed: database query failed'
-                    : 'News feed unavailable'}
-            </div>
-            {apiHint && <div style={{ opacity: 0.9 }}>{apiHint}</div>}
-          </div>
-        )}
-        {articles.length === 0 && !loading && !apiError && (
-          <div style={{ padding: 24, color: '#5a6478', textAlign: 'center', fontSize: '0.85rem', lineHeight: 1.5 }}>
-            <div>No news signals yet.</div>
-            {emptyFeedHint && (
-              <div style={{ marginTop: 12, color: '#94a3b8', fontSize: '0.8rem', maxWidth: 420, margin: '12px auto 0' }}>
-                {emptyFeedHint}
-              </div>
-            )}
-          </div>
-        )}
-        {articles.map((a) => {
-          const sent = sentimentLabel(a.sentiment_score);
-          const borderColor = scoreToColor(a.conflict_score ?? 0);
-          return (
-            <a
-              key={a.id}
-              href={a.url ?? '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'block',
-                padding: '10px 14px',
-                borderBottom: '1px solid rgba(255,255,255,0.04)',
-                borderLeft: `3px solid ${borderColor}`,
-                color: 'inherit',
-                textDecoration: 'none',
-              }}
+
+      <div className={styles.filterBar}>
+        <div className={styles.filterInput}>
+          <Filter size={11} style={{ color: '#2a3a4e', flexShrink: 0 }} />
+          <input
+            type="text"
+            placeholder="Filter by keyword, source, country…"
+            value={filterText}
+            onChange={e => setFilterText(e.target.value)}
+            className={styles.filterText}
+          />
+        </div>
+        <div className={styles.severityFilters}>
+          {(['ALL', 'CRITICAL', 'HIGH', 'MODERATE', 'LOW'] as const).map(s => (
+            <button
+              key={s}
+              className={`${styles.sevBtn} ${filterSeverity === s ? styles.sevBtnActive : ''}`}
+              style={filterSeverity === s && s !== 'ALL' ? {
+                color: SEVERITY_STYLES[s as SeverityLevel].color,
+                borderColor: SEVERITY_STYLES[s as SeverityLevel].border,
+              } : undefined}
+              onClick={() => setFilterSeverity(s)}
             >
-              <div
-                style={{
-                  display: 'flex',
-                  justifyContent: 'space-between',
-                  fontSize: '0.65rem',
-                  letterSpacing: '0.08em',
-                  textTransform: 'uppercase',
-                  color: '#5a6478',
-                  marginBottom: 4,
-                }}
-              >
-                <span>{a.source_name ?? 'Unknown'}</span>
-                <span>{relativeTime(a.published_at)}</span>
-              </div>
-              <div
-                style={{
-                  fontSize: '0.85rem',
-                  color: '#e6edf3',
-                  lineHeight: 1.35,
-                  marginBottom: 6,
-                }}
-              >
-                {a.title}
-              </div>
-              <div
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 10,
-                  fontSize: '0.65rem',
-                  color: '#94a3b8',
-                }}
-              >
+              {s}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className={styles.feed}>
+        {loading && Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className={styles.skeleton} />
+        ))}
+
+        {!loading && filtered.length === 0 && (
+          <div className={styles.empty}>
+            <span>NO SIGNALS MATCH CURRENT FILTERS</span>
+          </div>
+        )}
+
+        {filtered.map(a => {
+          const severity = getSeverity(a.conflict_score, a.sentiment_score);
+          const sourceType = getSourceType(a.source_name);
+          const sevStyle = SEVERITY_STYLES[severity];
+          const isWatched = a.country_iso ? watchedIsos.has(a.country_iso.trim().toUpperCase()) : false;
+
+          return (
+            <div key={a.id} className={styles.card} style={{ borderLeft: `2px solid ${sevStyle.color}` }}>
+              <div className={styles.cardTop}>
                 <span
-                  style={{
-                    color: sent.color,
-                    border: `1px solid ${sent.color}`,
-                    borderRadius: 3,
-                    padding: '1px 6px',
-                  }}
+                  className={styles.sevBadge}
+                  style={{ background: sevStyle.bg, color: sevStyle.color, borderColor: sevStyle.border }}
                 >
-                  {sent.label}
+                  {severity}
+                </span>
+                <span
+                  className={styles.sourceBadge}
+                  style={{ color: SOURCE_COLORS[sourceType] }}
+                >
+                  {sourceType}
                 </span>
                 {a.country_iso && (
                   <img
                     src={`https://flagcdn.com/w20/${a.country_iso.trim().toLowerCase()}.png`}
-                    alt=""
-                    width={16}
-                    height={11}
-                    style={{ borderRadius: 1 }}
+                    alt="" width={16} height={11}
+                    style={{ borderRadius: 1, flexShrink: 0 }}
                   />
                 )}
+                <span className={styles.time}>{relativeTime(a.published_at)}</span>
+              </div>
+
+              <div className={styles.cardTitle}>{a.title}</div>
+
+              <div className={styles.cardMeta}>
+                <span className={styles.source}>{a.source_name ?? 'Unknown'}</span>
                 {a.conflict_score != null && (
-                  <span style={{ fontFamily: 'JetBrains Mono, ui-monospace, monospace' }}>
-                    Conflict {(a.conflict_score * 100).toFixed(0)}
+                  <span className={styles.conflictScore}>
+                    THREAT {(a.conflict_score * 100).toFixed(0)}
                   </span>
                 )}
               </div>
-            </a>
+
+              <div className={styles.cardActions}>
+                {a.country_iso && !isWatched && (
+                  <button
+                    className={styles.watchBtn}
+                    onClick={() => addToWatchlist(a.country_iso!.trim())}
+                  >
+                    <Star size={10} /> Watch {a.country_iso}
+                  </button>
+                )}
+                {a.url && (
+                  <a href={a.url} target="_blank" rel="noopener noreferrer" className={styles.sourceLink}>
+                    <ExternalLink size={10} /> Source
+                  </a>
+                )}
+              </div>
+            </div>
           );
         })}
       </div>

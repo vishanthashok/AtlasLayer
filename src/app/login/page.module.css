@@ -1,0 +1,211 @@
+.page {
+  min-height: 100vh;
+  background: #060914;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  background-image:
+    repeating-linear-gradient(0deg, transparent, transparent 39px, rgba(0,212,255,0.02) 39px, rgba(0,212,255,0.02) 40px),
+    repeating-linear-gradient(90deg, transparent, transparent 39px, rgba(0,212,255,0.015) 39px, rgba(0,212,255,0.015) 40px);
+}
+
+.classBanner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 22px;
+  background: rgba(255, 59, 59, 0.06);
+  border-bottom: 1px solid rgba(255, 59, 59, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.55rem;
+  letter-spacing: 0.2em;
+  color: rgba(255, 59, 59, 0.5);
+  z-index: 10;
+}
+
+.card {
+  width: 100%;
+  max-width: 360px;
+  background: rgba(8, 11, 20, 0.95);
+  border: 1px solid rgba(0, 212, 255, 0.12);
+  padding: 28px 28px 22px;
+  box-shadow: 0 0 40px rgba(0, 212, 255, 0.05);
+}
+
+.logoWrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.logoDot {
+  width: 8px;
+  height: 8px;
+  background: #00d4ff;
+  border-radius: 50%;
+  box-shadow: 0 0 10px rgba(0, 212, 255, 0.7);
+}
+
+.logoText {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #c8d8e8;
+  letter-spacing: 0.04em;
+}
+
+.productName {
+  font-size: 0.58rem;
+  letter-spacing: 0.22em;
+  color: #2a3a4e;
+  margin-bottom: 20px;
+}
+
+.modeTabs {
+  display: flex;
+  border-bottom: 1px solid rgba(0, 212, 255, 0.08);
+  margin-bottom: 20px;
+}
+
+.modeTab {
+  flex: 1;
+  padding: 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #2a3a4e;
+  font-size: 0.62rem;
+  font-family: inherit;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 120ms;
+}
+
+.modeTab:hover { color: #5a6a7e; }
+.modeTabActive { color: #00d4ff; border-bottom-color: #00d4ff; }
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.field { display: flex; flex-direction: column; gap: 5px; }
+
+.label {
+  font-size: 0.58rem;
+  letter-spacing: 0.16em;
+  color: #2a3a4e;
+}
+
+.input {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  color: #8a9ab0;
+  padding: 9px 12px;
+  font-size: 0.72rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 150ms;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.input:focus { border-color: rgba(0, 212, 255, 0.35); color: #c8d8e8; }
+.input::placeholder { color: #1e2a3a; }
+
+.errorMsg {
+  font-size: 0.65rem;
+  color: #ff6b6b;
+  background: rgba(255, 59, 59, 0.06);
+  border: 1px solid rgba(255, 59, 59, 0.2);
+  padding: 7px 10px;
+  line-height: 1.4;
+}
+
+.successMsg {
+  font-size: 0.65rem;
+  color: #22d3a5;
+  background: rgba(34, 211, 165, 0.06);
+  border: 1px solid rgba(34, 211, 165, 0.2);
+  padding: 7px 10px;
+  line-height: 1.4;
+}
+
+.warningMsg {
+  font-size: 0.62rem;
+  color: #ffcc00;
+  background: rgba(255, 204, 0, 0.05);
+  border: 1px solid rgba(255, 204, 0, 0.15);
+  padding: 7px 10px;
+  line-height: 1.5;
+}
+
+.warningMsg code {
+  color: rgba(255, 204, 0, 0.8);
+}
+
+.submitBtn {
+  background: rgba(0, 212, 255, 0.08);
+  border: 1px solid rgba(0, 212, 255, 0.3);
+  color: #00d4ff;
+  font-size: 0.68rem;
+  font-family: inherit;
+  letter-spacing: 0.14em;
+  padding: 11px;
+  cursor: pointer;
+  transition: all 150ms;
+  text-transform: uppercase;
+  margin-top: 4px;
+}
+
+.submitBtn:hover:not(:disabled) {
+  background: rgba(0, 212, 255, 0.15);
+  box-shadow: 0 0 16px rgba(0, 212, 255, 0.12);
+}
+
+.submitBtn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.footer {
+  margin-top: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.backLink {
+  font-size: 0.6rem;
+  color: #1e2a3a;
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  transition: color 120ms;
+}
+
+.backLink:hover { color: #3a4a5e; }
+
+.guestLink {
+  font-size: 0.6rem;
+  color: rgba(0, 212, 255, 0.4);
+  text-decoration: none;
+  letter-spacing: 0.08em;
+  transition: color 120ms;
+}
+
+.guestLink:hover { color: #00d4ff; }
+
+.pageFooter {
+  margin-top: 24px;
+  font-size: 0.55rem;
+  letter-spacing: 0.1em;
+  color: #1a2030;
+}

@@ -1,0 +1,50 @@
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fieldLabel {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+  color: #2a3a4e;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.select {
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(0, 212, 255, 0.1);
+  color: #5a6a7e;
+  border-radius: 0;
+  padding: 3px 8px;
+  font-size: 0.65rem;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 150ms;
+}
+
+.select:focus { border-color: rgba(0, 212, 255, 0.3); }
+.select option { background: #060914; }
+
+.slider {
+  width: 80px;
+  accent-color: #00d4ff;
+  cursor: pointer;
+}
+
+.sliderVal {
+  font-size: 0.65rem;
+  color: #5a6a7e;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  width: 24px;
+  text-align: right;
+}
