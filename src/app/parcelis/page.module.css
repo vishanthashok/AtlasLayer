@@ -2,13 +2,18 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   background: #080c10;
   font-family: 'Inter', sans-serif;
+  overflow: hidden;
 }
+
+/* ── Header ── */
 
 .header {
   height: 48px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   padding: 0 20px;
@@ -28,6 +33,7 @@
   text-transform: uppercase;
   transition: color 0.2s;
   text-decoration: none;
+  flex-shrink: 0;
 }
 
 .backLink:hover { color: #94a3b8; }
@@ -36,6 +42,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 }
 
 .titleLabel {
@@ -59,7 +66,7 @@
   background-color: #22d3a5;
   border-radius: 50%;
   box-shadow: 0 0 10px rgba(34, 211, 165, 0.5);
-  margin-left: 10px;
+  flex-shrink: 0;
 }
 
 .modelSelector {
@@ -78,6 +85,7 @@
   outline: none;
   cursor: pointer;
   transition: all 0.2s;
+  max-width: 260px;
 }
 
 .modelSelect:hover {
@@ -85,16 +93,26 @@
   background: rgba(74, 158, 255, 0.1);
 }
 
+/* ── Mobile tab bar (hidden on desktop) ── */
+
+.mobileTabs {
+  display: none;
+}
+
+/* ── Content ── */
+
 .content {
   display: flex;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
 .mapContainer {
   flex: 0 0 68%;
   position: relative;
   border-right: 1px solid rgba(255,255,255,0.05);
+  overflow: hidden;
 }
 
 .panelContainer {
@@ -103,4 +121,101 @@
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: #1e2a3a transparent;
+}
+
+.mobileHidden {
+  /* overridden at mobile breakpoint */
+}
+
+/* ── Tablet (≤ 1024px) ── */
+
+@media (max-width: 1024px) {
+  .modelSelect {
+    max-width: 180px;
+    font-size: 0.72rem;
+    padding: 5px 8px;
+  }
+
+  .titleLabel {
+    display: none;
+  }
+
+  .mapContainer {
+    flex: 0 0 60%;
+  }
+
+  .panelContainer {
+    flex: 0 0 40%;
+  }
+}
+
+/* ── Mobile (≤ 768px) ── */
+
+@media (max-width: 768px) {
+  .header {
+    height: 44px;
+    padding: 0 12px;
+    gap: 10px;
+  }
+
+  .titleLabel {
+    display: none;
+  }
+
+  .modelSelector {
+    margin-right: 6px;
+  }
+
+  .modelSelect {
+    max-width: 140px;
+    font-size: 0.68rem;
+    padding: 4px 6px;
+  }
+
+  /* Show tab bar */
+  .mobileTabs {
+    display: flex;
+    flex-shrink: 0;
+    background: #0b0f15;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .mobileTab {
+    flex: 1;
+    padding: 10px 0;
+    background: transparent;
+    border: none;
+    color: #5a6478;
+    font-size: 0.78rem;
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 150ms, border-color 150ms;
+  }
+
+  .mobileTabActive {
+    color: #38bdf8;
+    border-bottom-color: #38bdf8;
+  }
+
+  /* Full-height panes, toggled by JS */
+  .content {
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .mapContainer,
+  .panelContainer {
+    flex: 1 1 100%;
+    width: 100%;
+    border-right: none;
+    min-height: 0;
+  }
+
+  .mobileHidden {
+    display: none !important;
+  }
 }

@@ -37,6 +37,33 @@
 @media (max-width: 768px) {
   .cardsContainer {
     flex-direction: column;
+    gap: 1.25rem;
+  }
+
+  .container {
+    padding: 1.5rem 1rem;
+    justify-content: flex-start;
+    padding-top: 3rem;
+  }
+
+  .header {
+    margin-bottom: 2.5rem;
+  }
+
+  .logo {
+    font-size: 1.8rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .card {
+    padding: 2rem 1.5rem;
+  }
+
+  .card h2 {
+    font-size: 1.4rem;
   }
 }
 

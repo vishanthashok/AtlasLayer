@@ -2,18 +2,24 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh;
   width: 100vw;
   background-color: var(--background);
+  overflow: hidden;
 }
+
+/* ── Header ── */
 
 .header {
   height: 60px;
+  flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 24px;
   background-color: var(--surface-color);
   border-bottom: 1px solid var(--border-color);
+  gap: 12px;
 }
 
 .backLink {
@@ -23,11 +29,11 @@
   color: #8b949e;
   font-size: 0.9rem;
   transition: color 0.2s;
+  flex-shrink: 0;
+  text-decoration: none;
 }
 
-.backLink:hover {
-  color: var(--foreground);
-}
+.backLink:hover { color: var(--foreground); }
 
 .titleBlock {
   display: flex;
@@ -35,6 +41,7 @@
   gap: 2px;
   margin-left: 16px;
   margin-right: auto;
+  flex-shrink: 0;
 }
 
 .titleBrand {
@@ -52,6 +59,7 @@
   font-size: 1rem;
 }
 
+/* Layer controls: scrollable strip */
 .layerControls {
   display: flex;
   gap: 8px;
@@ -59,7 +67,14 @@
   padding: 4px;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-color);
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  flex-shrink: 1;
+  min-width: 0;
 }
+
+.layerControls::-webkit-scrollbar { display: none; }
 
 .layerBtn {
   background: transparent;
@@ -69,7 +84,9 @@
   border-radius: 4px;
   font-size: 0.875rem;
   font-weight: 500;
+  white-space: nowrap;
   transition: all var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .layerBtn:hover {
@@ -84,16 +101,50 @@
   border: 1px solid var(--border-color);
 }
 
+/* ⌘K button */
+.cmdBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: 1px solid rgba(0, 229, 255, 0.2);
+  color: #8b949e;
+  padding: 6px 12px;
+  border-radius: 2px;
+  font-size: 0.78rem;
+  font-family: 'JetBrains Mono', monospace;
+  cursor: pointer;
+  margin-left: 16px;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.cmdBtn:hover {
+  color: var(--primary-color);
+  border-color: var(--primary-color);
+  background: rgba(0, 229, 255, 0.05);
+}
+
+/* ── Mobile tab bar ── */
+
+.mobileTabs {
+  display: none;
+}
+
+/* ── Content ── */
+
 .content {
   display: flex;
   flex: 1;
   overflow: hidden;
+  min-height: 0;
 }
 
 .mapContainer {
   flex: 0 0 70%;
   position: relative;
   border-right: 1px solid var(--border-color);
+  overflow: hidden;
 }
 
 .panelContainer {
@@ -115,25 +166,100 @@
   font-weight: 500;
 }
 
-/* Command Palette trigger button */
-.cmdBtn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  background: transparent;
-  border: 1px solid rgba(0, 229, 255, 0.2);
-  color: #8b949e;
-  padding: 6px 12px;
-  border-radius: 2px;
-  font-size: 0.78rem;
-  font-family: 'JetBrains Mono', monospace;
-  cursor: pointer;
-  margin-left: 16px;
-  transition: all 0.2s;
+.mobileHidden {
+  /* overridden at mobile */
 }
 
-.cmdBtn:hover {
-  color: var(--primary-color);
-  border-color: var(--primary-color);
-  background: rgba(0, 229, 255, 0.05);
+/* ── Tablet (≤ 1024px) ── */
+
+@media (max-width: 1024px) {
+  .header {
+    padding: 0 16px;
+    gap: 8px;
+  }
+
+  .titleBrand { display: none; }
+
+  .layerBtn {
+    font-size: 0.78rem;
+    padding: 5px 10px;
+  }
+
+  .cmdBtn span { display: none; }
+  .cmdBtn { padding: 6px 8px; margin-left: 8px; }
+
+  .mapContainer { flex: 0 0 60%; }
+  .panelContainer { flex: 0 0 40%; }
+}
+
+/* ── Mobile (≤ 768px) ── */
+
+@media (max-width: 768px) {
+  .header {
+    height: 50px;
+    padding: 0 12px;
+  }
+
+  .titleBlock { margin-left: 8px; }
+  .title { font-size: 0.88rem; }
+  .titleBrand { display: none; }
+
+  /* Layer buttons scroll horizontally in header — shrink further */
+  .layerControls {
+    padding: 3px;
+    gap: 4px;
+  }
+
+  .layerBtn {
+    font-size: 0.72rem;
+    padding: 4px 8px;
+  }
+
+  .cmdBtn { display: none; }
+
+  /* Show tab bar */
+  .mobileTabs {
+    display: flex;
+    flex-shrink: 0;
+    background: var(--surface-color);
+    border-bottom: 1px solid var(--border-color);
+  }
+
+  .mobileTab {
+    flex: 1;
+    padding: 10px 0;
+    background: transparent;
+    border: none;
+    color: #5a6478;
+    font-size: 0.78rem;
+    font-family: inherit;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: color 150ms, border-color 150ms;
+  }
+
+  .mobileTabActive {
+    color: var(--product-fieldstone-accent);
+    border-bottom-color: var(--product-fieldstone-accent);
+  }
+
+  .content {
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .mapContainer,
+  .panelContainer {
+    flex: 1 1 100%;
+    width: 100%;
+    border-right: none;
+    min-height: 0;
+  }
+
+  .mobileHidden {
+    display: none !important;
+  }
 }

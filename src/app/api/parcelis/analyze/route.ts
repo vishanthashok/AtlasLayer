@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { runAllConnectors } from '../../../../lib/property-intelligence/connectors';
 import { buildPropertyIntelligence, buildHazardProfile } from '../../../../lib/property-intelligence/ontology';
 import { buildQuantSystemPrompt, buildQuantUserPrompt } from '../../../../lib/property-intelligence/prompts';
@@ -8,11 +9,42 @@ import { cacheGet, cacheSet, cacheKeyGeo } from '../../../../lib/property-intell
 import { parseJsonFromModelOutput } from '../../../../lib/property-intelligence/extractJson';
 import type { IngestionBundle } from '../../../../lib/property-intelligence/connectors';
 import type { PropertyIntelligenceObject } from '../../../../lib/property-intelligence/ontology';
+import type { HouseModel } from '../../../../models/types';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 
 const ANALYSIS_SCHEMA_VER = 'v2';
+
+const ALLOWED_MODELS = [
+  'claude-sonnet-4-6',
+  'claude-opus-4-7',
+  'claude-haiku-4-5',
+  'claude-haiku-4-5-20251001',
+  'gemini-1.5-flash',
+  'gemini-1.5-pro',
+] as const;
+
+const HouseModelSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  footprintDimensions: z.object({ width: z.number(), depth: z.number() }),
+  styleType: z.string(),
+  estimatedFitScore: z.number().optional(),
+  renderAssetUrl: z.string().optional(),
+  description: z.string().optional(),
+});
+
+const BodySchema = z.object({
+  land: z.object({
+    latitude: z.coerce.number().min(-90).max(90),
+    longitude: z.coerce.number().min(-180).max(180),
+    address: z.string().max(500).optional(),
+    polygon: z.unknown().optional(),
+  }),
+  houseModels: z.array(HouseModelSchema).max(20).optional().default([]),
+  model: z.string().max(80).optional().default('claude-sonnet-4-6'),
+});
 
 function getRegistryConnector(streetAddress: string, cleanCounty: string | undefined) {
   if (!cleanCounty) return null;
@@ -80,17 +112,15 @@ function buildPropertyData(ontology: PropertyIntelligenceObject, bundle: Ingesti
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const land = body.land || {};
-    const lat = Number(land.latitude);
-    const lon = Number(land.longitude);
-    const address = land.address as string | undefined;
-    const houseModels = body.houseModels || [];
-    const requestedModel = body.model || 'claude-sonnet-4-6';
-
-    if (isNaN(lat) || isNaN(lon)) {
-      throw new Error('Invalid or missing coordinates in request. Please select a point on the map.');
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
     }
+    const { land, houseModels, model: requestedModel } = parsed.data;
+    const lat = land.latitude;
+    const lon = land.longitude;
+    const address = land.address;
 
     const cacheKey = cacheKeyGeo(`parcelis_${ANALYSIS_SCHEMA_VER}`, lat, lon, requestedModel);
     const cached = await cacheGet<Record<string, unknown>>(cacheKey);
@@ -128,20 +158,20 @@ export async function POST(req: Request) {
       throw new Error('Missing AI API Key');
     }
 
-    const raw = await generateQuantAnalysisJson(
+    const modelRaw = await generateQuantAnalysisJson(
       requestedModel,
       buildQuantSystemPrompt(),
       userPrompt
     );
 
-    const parsed = parseJsonFromModelOutput(raw);
-    if (!parsed) {
-      console.error('[Parcelis] Non-JSON model output (first 400 chars):', raw.slice(0, 400));
+    const modelParsed = parseJsonFromModelOutput(modelRaw);
+    if (!modelParsed) {
+      console.error('[Parcelis] Non-JSON model output (first 400 chars):', modelRaw.slice(0, 400));
       return NextResponse.json({ error: 'Model returned non-JSON output' }, { status: 502 });
     }
 
     const merged = mergeAndValidateParcelisResponse({
-      parsed,
+      parsed: modelParsed,
       ontology,
       bundle,
       houseModels,

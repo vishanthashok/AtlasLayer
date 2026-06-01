@@ -1,12 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import styles from './page.module.css';
 import dynamic from 'next/dynamic';
 import DashboardPanel from '../../components/Fieldstone/DashboardPanel/DashboardPanel';
 import CommandPalette, { CommandAction } from '../../components/Fieldstone/CommandPalette/CommandPalette';
+import { Toast } from '../../components/ui/Toast';
 import { Layers, ArrowLeft, Map, Droplets, Thermometer, Wind, Activity, BarChart2, Zap, FlaskConical, Command } from 'lucide-react';
 import Link from 'next/link';
+import type { FieldstoneAnalysisResult } from '../../lib/fieldstone/types';
 
 // Dynamically import MapInterface with ssr: false
 const MapInterface = dynamic(() => import('../../components/Fieldstone/MapInterface/MapInterface'), {
@@ -17,12 +20,15 @@ const MapInterface = dynamic(() => import('../../components/Fieldstone/MapInterf
 type LayerType = 'rainfall' | 'temp' | 'soil' | 'drought' | 'ndvi' | 'flood';
 
 export default function FieldstonePage() {
+  const router = useRouter();
   const [selectedLayer, setSelectedLayer] = useState<LayerType>('drought');
-  const [polygonData, setPolygonData] = useState<any>(null);
-  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [polygonData, setPolygonData] = useState<GeoJSON.Polygon | null>(null);
+  const [analysisResult, setAnalysisResult] = useState<FieldstoneAnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisMode, setAnalysisMode] = useState<'fast' | 'deep'>('deep');
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
+  const [mobileTab, setMobileTab] = useState<'map' | 'panel'>('map');
 
   // ⌘K / Ctrl+K shortcut
   useEffect(() => {
@@ -36,12 +42,12 @@ export default function FieldstonePage() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const handlePolygonChange = (polygon: any) => {
+  const handlePolygonChange = (polygon: GeoJSON.Polygon | null) => {
     setPolygonData(polygon);
     if (!polygon) setAnalysisResult(null);
   };
 
-  const handleAnalyze = useCallback(async (scenarioOverrides?: any) => {
+  const handleAnalyze = useCallback(async (scenarioOverrides?: Record<string, unknown>) => {
     if (!polygonData) return;
     setIsAnalyzing(true);
     try {
@@ -51,11 +57,14 @@ export default function FieldstonePage() {
         body: JSON.stringify({ polygon: polygonData, mode: analysisMode, scenarioOverrides })
       });
       const data = await response.json();
-      if (!response.ok) { alert(data.error || 'An error occurred during analysis'); return; }
-      setAnalysisResult(data);
+      if (!response.ok) {
+        setToastMsg(data.error || 'An error occurred during analysis');
+        return;
+      }
+      setAnalysisResult(data as FieldstoneAnalysisResult);
     } catch (error) {
       console.error("Failed to analyze:", error);
-      alert("Failed to connect to the server.");
+      setToastMsg("Failed to connect to the server.");
     } finally {
       setIsAnalyzing(false);
     }
@@ -76,10 +85,10 @@ export default function FieldstonePage() {
     { id: 'mode-fast', label: 'Set Mode: Fast', description: 'Future analyses will use Fast mode', icon: <Zap size={15} />, category: 'Analysis', action: () => setAnalysisMode('fast'), keywords: ['mode'] },
     { id: 'mode-deep', label: 'Set Mode: Deep AI', description: 'Future analyses will use Deep AI mode', icon: <FlaskConical size={15} />, category: 'Analysis', action: () => setAnalysisMode('deep'), keywords: ['mode'] },
     // Navigation
-    { id: 'nav-home', label: 'Go to Hub', description: 'Return to PropertyVision platform selection', icon: <ArrowLeft size={15} />, category: 'Navigation', action: () => window.location.href = '/', keywords: ['home', 'hub', 'back'] },
-    { id: 'nav-parcelis', label: 'Open Parcelis', description: 'Switch to real estate parcel intelligence', icon: <Map size={15} />, category: 'Navigation', action: () => window.location.href = '/parcelis', keywords: ['parcel', 'real estate', 'residential'] },
+    { id: 'nav-home', label: 'Go to Hub', description: 'Return to AtlasLayer platform selection', icon: <ArrowLeft size={15} />, category: 'Navigation', action: () => router.push('/'), keywords: ['home', 'hub', 'back'] },
+    { id: 'nav-parcelis', label: 'Open Parcelis', description: 'Switch to real estate parcel intelligence', icon: <Map size={15} />, category: 'Navigation', action: () => router.push('/parcelis'), keywords: ['parcel', 'real estate', 'residential'] },
     // Export
-    { id: 'export-pdf', label: 'Export PDF Report', description: 'Download structured intelligence report', icon: <BarChart2 size={15} />, category: 'Export', action: () => { /* DashboardPanel handles this via ref — trigger via keyboard shortcut hint */ alert('Use the Export button in the Analysis panel.'); }, keywords: ['pdf', 'download', 'report', 'export'] },
+    { id: 'export-pdf', label: 'Export PDF Report', description: 'Download structured intelligence report', icon: <BarChart2 size={15} />, category: 'Export', action: () => setToastMsg('Use the Export button in the Analysis panel.'), keywords: ['pdf', 'download', 'report', 'export'] },
   ];
 
   return (
@@ -119,16 +128,31 @@ export default function FieldstonePage() {
         </button>
       </header>
       
+      <div className={styles.mobileTabs}>
+        <button
+          className={`${styles.mobileTab} ${mobileTab === 'map' ? styles.mobileTabActive : ''}`}
+          onClick={() => setMobileTab('map')}
+        >
+          Map
+        </button>
+        <button
+          className={`${styles.mobileTab} ${mobileTab === 'panel' ? styles.mobileTabActive : ''}`}
+          onClick={() => setMobileTab('panel')}
+        >
+          Analysis
+        </button>
+      </div>
+
       <div className={styles.content}>
-        <div className={styles.mapContainer}>
-          <MapInterface 
-            selectedLayer={selectedLayer} 
+        <div className={`${styles.mapContainer} ${mobileTab !== 'map' ? styles.mobileHidden : ''}`}>
+          <MapInterface
+            selectedLayer={selectedLayer}
             onPolygonChange={handlePolygonChange}
           />
         </div>
-        
-        <div className={styles.panelContainer}>
-          <DashboardPanel 
+
+        <div className={`${styles.panelContainer} ${mobileTab !== 'panel' ? styles.mobileHidden : ''}`}>
+          <DashboardPanel
             hasPolygon={!!polygonData}
             isAnalyzing={isAnalyzing}
             onAnalyze={handleAnalyze}
@@ -138,6 +162,10 @@ export default function FieldstonePage() {
           />
         </div>
       </div>
+
+      {toastMsg && (
+        <Toast message={toastMsg} variant="error" onDismiss={() => setToastMsg(null)} />
+      )}
     </div>
   );
 }

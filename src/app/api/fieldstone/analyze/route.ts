@@ -1,11 +1,25 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
 import * as crypto from 'crypto';
+import { z } from 'zod';
+import { cacheGet, cacheSet } from '../../../../lib/property-intelligence/cache';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
 
-const insightsCache: Record<string, unknown> = {};
+const ScenarioSchema = z.object({
+  rainfallMultiplier: z.number().min(0).max(10).optional(),
+  tempOffset: z.number().min(-50).max(50).optional(),
+  soilType: z.string().max(50).optional(),
+}).optional();
+
+const BodySchema = z.object({
+  polygon: z.object({
+    coordinates: z.array(z.array(z.tuple([z.number(), z.number()]))).min(1),
+  }),
+  mode: z.enum(['fast', 'deep']).optional().default('deep'),
+  scenarioOverrides: ScenarioSchema,
+});
 
 // ── Soil texture classification from clay/sand %
 function classifySoil(clay: number, sand: number): string {
@@ -43,13 +57,16 @@ function computeScores(data: any) {
 
 export async function POST(req: Request) {
   try {
-    const { polygon, mode = 'deep', scenarioOverrides } = await req.json();
-    if (!polygon?.coordinates) return NextResponse.json({ error: 'Invalid polygon data' }, { status: 400 });
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
+    }
+    const { polygon, mode, scenarioOverrides } = parsed.data;
 
     const coordinates = polygon.coordinates[0];
-    // Use centroid, not just first point
-    const centerLon = coordinates.reduce((s: number, c: number[]) => s + c[0], 0) / coordinates.length;
-    const centerLat = coordinates.reduce((s: number, c: number[]) => s + c[1], 0) / coordinates.length;
+    const centerLon = coordinates.reduce((s, c) => s + c[0], 0) / coordinates.length;
+    const centerLat = coordinates.reduce((s, c) => s + c[1], 0) / coordinates.length;
 
     // ── 1. Reverse Geocode
     let locationName = `Lat: ${centerLat.toFixed(4)}, Lon: ${centerLon.toFixed(4)}`;
@@ -166,9 +183,10 @@ export async function POST(req: Request) {
     }
 
     // ── 5. Deep mode: Claude with full real data
-    const cacheKey = crypto.createHash('sha256').update(JSON.stringify(earthData) + '_v6_deep').digest('hex');
-    if (insightsCache[cacheKey]) {
-      return NextResponse.json({ stats: earthData, scores, riskScore: scores.risk, insights: insightsCache[cacheKey], mode: 'deep', _cached: true });
+    const cacheKey = `fieldstone:deep:${crypto.createHash('sha256').update(JSON.stringify(earthData) + '_v6_deep').digest('hex')}`;
+    const cachedInsights = await cacheGet<{ summary: string; risks: string[]; crops: string[] }>(cacheKey);
+    if (cachedInsights) {
+      return NextResponse.json({ stats: earthData, scores, riskScore: scores.risk, insights: cachedInsights, mode: 'deep', _cached: true });
     }
 
     const prompt = `You are an expert agricultural scientist and land analyst with access to real satellite and climate data.
@@ -220,8 +238,8 @@ Return ONLY a raw JSON object, no markdown, no backticks:
       });
       const raw = msg.content[0].type === 'text' ? msg.content[0].text.trim() : '{}';
       const clean = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
-      insightsResponse = JSON.parse(clean);
-      insightsCache[cacheKey] = insightsResponse;
+      insightsResponse = JSON.parse(clean) as { summary: string; risks: string[]; crops: string[] };
+      await cacheSet(cacheKey, insightsResponse, 60 * 60 * 24);
     } catch (e) {
       console.error('Claude error:', e);
       insightsResponse = {

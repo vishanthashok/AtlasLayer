@@ -18,6 +18,7 @@ export default function ParcelisPage() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [mobileTab, setMobileTab] = useState<'map' | 'panel'>('map');
 
   const handleAnalyze = async () => {
     if (!selectedLand) return;
@@ -65,14 +66,29 @@ export default function ParcelisPage() {
         <div className={styles.statusDot} />
       </header>
       
+      <div className={styles.mobileTabs}>
+        <button
+          className={`${styles.mobileTab} ${mobileTab === 'map' ? styles.mobileTabActive : ''}`}
+          onClick={() => setMobileTab('map')}
+        >
+          Map
+        </button>
+        <button
+          className={`${styles.mobileTab} ${mobileTab === 'panel' ? styles.mobileTabActive : ''}`}
+          onClick={() => setMobileTab('panel')}
+        >
+          Intelligence
+        </button>
+      </div>
+
       <div className={styles.content}>
-        <div className={styles.mapContainer}>
+        <div className={`${styles.mapContainer} ${mobileTab !== 'map' ? styles.mobileHidden : ''}`}>
           <ParcelisMap onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
         </div>
-        <div className={styles.panelContainer}>
-          <ParcelisPanel 
-            isAnalyzing={isAnalyzing} 
-            analysisResult={analysisResult} 
+        <div className={`${styles.panelContainer} ${mobileTab !== 'panel' ? styles.mobileHidden : ''}`}>
+          <ParcelisPanel
+            isAnalyzing={isAnalyzing}
+            analysisResult={analysisResult}
             error={error}
           />
         </div>

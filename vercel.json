@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/conflict/refresh?step=all",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 12 * * *"
     }
   ],
   "functions": {

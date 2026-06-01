@@ -4,11 +4,9 @@ import { CONFLICT_UPDATES_KEY } from './constants';
 import { normalizeIso2 } from './iso';
 import { computeMlViolenceScore } from './ml/safetyRiskModel';
 
-/** Re-export for callers that already depend on this path. */
 export { CONFLICT_UPDATES_KEY } from './constants';
 
 const CONFIDENCE_TIERS = [0.3, 0.5, 0.75, 0.95];
-
 const HEATMAP_KEY_PREFIX = 'conflict:heatmap';
 const NEWS_KEY_PREFIX = 'conflict:news';
 
@@ -22,111 +20,234 @@ interface ScoreData {
   data_sources: string[];
 }
 
-interface CountryRow {
-  iso_a2: string;
+interface CountryRow { iso_a2: string; }
+
+// ── Bulk data shapes ────────────────────────────────────────────────────────
+
+interface AdvisoryBulkRow {
+  country_iso: string;
+  level: number;
+  full_text: string | null;
+  headline: string | null;
+  fetched_at: string;
 }
 
-interface AdvisoryRow {
+interface NewsBulkRow {
+  country_iso: string | null;
+  conflict_score: number | null;
+}
+
+interface SocialBulkRow {
+  country_iso: string | null;
+  sentiment: number | null;
+}
+
+interface AdvisoryMap {
   level: number;
   full_text: string | null;
   headline: string | null;
 }
 
-interface AggRow {
-  avg: number | null;
-  cnt: number | null;
-}
+interface AggRow { avg: number; cnt: number; }
 
-async function getLatestAdvisory(iso: string): Promise<AdvisoryRow | null> {
+// ── Bulk fetchers ────────────────────────────────────────────────────────────
+
+async function fetchAllLatestAdvisories(): Promise<Map<string, AdvisoryMap>> {
   const supabase = getSupabaseAdmin();
-  const key = normalizeIso2(iso);
+  // DISTINCT ON equivalent: fetch recent window (48h) and keep latest per country in JS
+  const since = new Date(Date.now() - 48 * 60 * 60 * 1000).toISOString();
   const { data, error } = await supabase
     .from('travel_advisories')
-    .select('level, full_text, headline')
-    .eq('country_iso', key)
-    .order('fetched_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  if (error || !data) return null;
-  return data as AdvisoryRow;
+    .select('country_iso, level, full_text, headline, fetched_at')
+    .gte('fetched_at', since)
+    .order('fetched_at', { ascending: false });
+
+  const map = new Map<string, AdvisoryMap>();
+  if (error || !data) return map;
+
+  for (const row of data as AdvisoryBulkRow[]) {
+    const iso = normalizeIso2(row.country_iso);
+    if (iso && !map.has(iso)) {
+      map.set(iso, { level: row.level, full_text: row.full_text, headline: row.headline });
+    }
+  }
+  return map;
 }
 
-async function getNewsAggregate(iso: string): Promise<AggRow> {
+async function fetchAllNewsAggregates(): Promise<Map<string, AggRow>> {
   const supabase = getSupabaseAdmin();
   const since = new Date(Date.now() - 6 * 60 * 60 * 1000).toISOString();
-  const key = normalizeIso2(iso);
   const { data, error } = await supabase
     .from('news_articles')
-    .select('conflict_score')
-    .eq('country_iso', key)
-    .gte('ingested_at', since);
+    .select('country_iso, conflict_score')
+    .gte('ingested_at', since)
+    .not('country_iso', 'is', null);
 
-  if (error || !data || data.length === 0) return { avg: 0, cnt: 0 };
-  let sum = 0;
-  for (const row of data as Array<{ conflict_score: number | null }>) {
-    sum += row.conflict_score ?? 0;
+  const map = new Map<string, { sum: number; cnt: number }>();
+  if (!error && data) {
+    for (const row of data as NewsBulkRow[]) {
+      const iso = normalizeIso2(row.country_iso ?? '');
+      if (!iso) continue;
+      const cur = map.get(iso) ?? { sum: 0, cnt: 0 };
+      cur.sum += row.conflict_score ?? 0;
+      cur.cnt += 1;
+      map.set(iso, cur);
+    }
   }
-  return { avg: sum / data.length, cnt: data.length };
+  const result = new Map<string, AggRow>();
+  for (const [iso, { sum, cnt }] of map) {
+    result.set(iso, { avg: cnt > 0 ? sum / cnt : 0, cnt });
+  }
+  return result;
 }
 
-async function getSocialAggregate(iso: string): Promise<AggRow> {
+async function fetchAllSocialAggregates(): Promise<Map<string, AggRow>> {
   const supabase = getSupabaseAdmin();
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-  const key = normalizeIso2(iso);
   const { data, error } = await supabase
     .from('social_signals')
-    .select('sentiment')
-    .eq('country_iso', key)
-    .gte('signal_at', since);
+    .select('country_iso, sentiment')
+    .gte('signal_at', since)
+    .not('country_iso', 'is', null);
 
-  if (error || !data || data.length === 0) return { avg: 0, cnt: 0 };
-  let sum = 0;
-  for (const row of data as Array<{ sentiment: number | null }>) {
-    const s = row.sentiment ?? 0;
-    if (s < -0.3) sum += 0.8;
-    else if (s < 0) sum += 0.5;
-    else sum += 0.2;
+  const map = new Map<string, { sum: number; cnt: number }>();
+  if (!error && data) {
+    for (const row of data as SocialBulkRow[]) {
+      const iso = normalizeIso2(row.country_iso ?? '');
+      if (!iso) continue;
+      const cur = map.get(iso) ?? { sum: 0, cnt: 0 };
+      const s = row.sentiment ?? 0;
+      const risk = s < -0.3 ? 0.8 : s < 0 ? 0.5 : 0.2;
+      cur.sum += risk;
+      cur.cnt += 1;
+      map.set(iso, cur);
+    }
   }
-  return { avg: sum / data.length, cnt: data.length };
+  const result = new Map<string, AggRow>();
+  for (const [iso, { sum, cnt }] of map) {
+    result.set(iso, { avg: cnt > 0 ? sum / cnt : 0, cnt });
+  }
+  return result;
 }
 
-export async function computeCompositeScore(iso: string): Promise<ScoreData> {
-  const adv = await getLatestAdvisory(iso);
-  const level = adv?.level ?? null;
+// ── Score computation (uses pre-fetched bulk maps) ───────────────────────────
 
-  const news = await getNewsAggregate(iso);
-  const social = await getSocialAggregate(iso);
+function computeScoreFromMaps(
+  iso: string,
+  advisories: Map<string, AdvisoryMap>,
+  newsAggs: Map<string, AggRow>,
+  socialAggs: Map<string, AggRow>,
+): ScoreData {
+  const adv = advisories.get(iso) ?? null;
+  const level = adv?.level ?? null;
+  const news = newsAggs.get(iso) ?? { avg: 0, cnt: 0 };
+  const social = socialAggs.get(iso) ?? { avg: 0, cnt: 0 };
 
   const ml = computeMlViolenceScore({
     stateDeptLevel: level,
     advisoryFullText: adv?.full_text,
     advisoryHeadline: adv?.headline,
-    newsRisk01: news.avg ?? 0,
-    socialRisk01: social.avg ?? 0,
+    newsRisk01: news.avg,
+    socialRisk01: social.avg,
   });
 
-  const composite = ml.score;
-
   const signalsPresent =
-    (level != null ? 1 : 0) + ((news.cnt ?? 0) >= 5 ? 1 : 0) + ((social.cnt ?? 0) >= 10 ? 1 : 0);
+    (level != null ? 1 : 0) +
+    (news.cnt >= 5 ? 1 : 0) +
+    (social.cnt >= 10 ? 1 : 0);
   const confidence = CONFIDENCE_TIERS[signalsPresent] ?? CONFIDENCE_TIERS[0]!;
 
   const sources: string[] = [];
   if (level != null) sources.push('state_dept');
-  if ((news.cnt ?? 0) > 0) sources.push('news');
-  if ((social.cnt ?? 0) > 0) sources.push('social');
+  if (news.cnt > 0) sources.push('news');
+  if (social.cnt > 0) sources.push('social');
   sources.push('ml_v1');
 
   return {
-    country_iso: normalizeIso2(iso),
+    country_iso: iso,
     state_dept_level: level,
-    news_conflict_score: Number((news.avg ?? 0).toFixed(4)),
-    social_signal_score: Number((social.avg ?? 0).toFixed(4)),
-    composite_score: Number(composite.toFixed(4)),
+    news_conflict_score: Number(news.avg.toFixed(4)),
+    social_signal_score: Number(social.avg.toFixed(4)),
+    composite_score: Number(ml.score.toFixed(4)),
     confidence,
     data_sources: sources,
   };
 }
+
+// ── Single-country export (used by heatmap API for on-demand refresh) ────────
+
+export async function computeCompositeScore(iso: string): Promise<ScoreData> {
+  const supabase = getSupabaseAdmin();
+  const key = normalizeIso2(iso);
+
+  const [advRes, newsRes, socialRes] = await Promise.all([
+    supabase
+      .from('travel_advisories')
+      .select('level, full_text, headline')
+      .eq('country_iso', key)
+      .order('fetched_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('news_articles')
+      .select('conflict_score')
+      .eq('country_iso', key)
+      .gte('ingested_at', new Date(Date.now() - 6 * 3600 * 1000).toISOString()),
+    supabase
+      .from('social_signals')
+      .select('sentiment')
+      .eq('country_iso', key)
+      .gte('signal_at', new Date(Date.now() - 3600 * 1000).toISOString()),
+  ]);
+
+  const adv = advRes.data as { level: number; full_text: string | null; headline: string | null } | null;
+  const level = adv?.level ?? null;
+
+  const newsRows = (newsRes.data ?? []) as Array<{ conflict_score: number | null }>;
+  const newsAvg = newsRows.length
+    ? newsRows.reduce((s, r) => s + (r.conflict_score ?? 0), 0) / newsRows.length
+    : 0;
+
+  const socialRows = (socialRes.data ?? []) as Array<{ sentiment: number | null }>;
+  const socialAvg = socialRows.length
+    ? socialRows.reduce((s, r) => {
+        const v = r.sentiment ?? 0;
+        return s + (v < -0.3 ? 0.8 : v < 0 ? 0.5 : 0.2);
+      }, 0) / socialRows.length
+    : 0;
+
+  const ml = computeMlViolenceScore({
+    stateDeptLevel: level,
+    advisoryFullText: adv?.full_text,
+    advisoryHeadline: adv?.headline,
+    newsRisk01: newsAvg,
+    socialRisk01: socialAvg,
+  });
+
+  const signalsPresent =
+    (level != null ? 1 : 0) +
+    (newsRows.length >= 5 ? 1 : 0) +
+    (socialRows.length >= 10 ? 1 : 0);
+  const confidence = CONFIDENCE_TIERS[signalsPresent] ?? CONFIDENCE_TIERS[0]!;
+
+  const sources: string[] = [];
+  if (level != null) sources.push('state_dept');
+  if (newsRows.length > 0) sources.push('news');
+  if (socialRows.length > 0) sources.push('social');
+  sources.push('ml_v1');
+
+  return {
+    country_iso: key,
+    state_dept_level: level,
+    news_conflict_score: Number(newsAvg.toFixed(4)),
+    social_signal_score: Number(socialAvg.toFixed(4)),
+    composite_score: Number(ml.score.toFixed(4)),
+    confidence,
+    data_sources: sources,
+  };
+}
+
+// ── Cache invalidation ───────────────────────────────────────────────────────
 
 async function invalidateHeatmapCaches(): Promise<void> {
   await cacheSet('conflict:cache_version', String(Date.now()), 60 * 60 * 24);
@@ -140,25 +261,33 @@ export interface RecomputeResult {
   timestamp: string;
 }
 
-/** Recompute composite score for every country and persist + invalidate. */
+/**
+ * Recompute composite score for every country.
+ * 3 bulk queries total (was N×3 queries before this refactor).
+ */
 export async function recomputeAllScores(): Promise<RecomputeResult> {
   const t0 = Date.now();
   const supabase = getSupabaseAdmin();
 
   const { data: countryRows, error } = await supabase.from('countries').select('iso_a2');
-
   if (error || !countryRows) {
     console.error('[scorer] failed to load countries', error);
     return { updated_count: 0, duration_ms: Date.now() - t0, timestamp: new Date().toISOString() };
   }
 
+  // Bulk-fetch all signal data in parallel (3 queries regardless of country count)
+  const [advisories, newsAggs, socialAggs] = await Promise.all([
+    fetchAllLatestAdvisories(),
+    fetchAllNewsAggregates(),
+    fetchAllSocialAggregates(),
+  ]);
+
   const updates: ScoreData[] = [];
   for (const row of countryRows as CountryRow[]) {
+    const iso = normalizeIso2(row.iso_a2);
+    if (!iso) continue;
     try {
-      const iso = normalizeIso2(row.iso_a2);
-      if (!iso) continue;
-      const score = await computeCompositeScore(iso);
-      updates.push(score);
+      updates.push(computeScoreFromMaps(iso, advisories, newsAggs, socialAggs));
     } catch (e) {
       console.warn(`[scorer] compute failed for ${row.iso_a2}`, String(e));
     }
@@ -177,9 +306,7 @@ export async function recomputeAllScores(): Promise<RecomputeResult> {
         data_sources: u.data_sources,
       }));
       const { error: insErr } = await supabase.from('conflict_risk_scores').insert(chunk);
-      if (insErr) {
-        console.error('[scorer] insert chunk failed', insErr);
-      }
+      if (insErr) console.error('[scorer] insert chunk failed', insErr);
     }
   }
 
@@ -187,17 +314,9 @@ export async function recomputeAllScores(): Promise<RecomputeResult> {
   await invalidateHeatmapCaches();
   await cacheSet(
     CONFLICT_UPDATES_KEY,
-    {
-      event: 'scores_updated',
-      updated_count: updates.length,
-      timestamp,
-    },
+    { event: 'scores_updated', updated_count: updates.length, timestamp },
     60 * 60
   );
 
-  return {
-    updated_count: updates.length,
-    duration_ms: Date.now() - t0,
-    timestamp,
-  };
+  return { updated_count: updates.length, duration_ms: Date.now() - t0, timestamp };
 }

@@ -1,17 +1,32 @@
 import { NextResponse } from 'next/server';
 import Anthropic from '@anthropic-ai/sdk';
+import { z } from 'zod';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
+const MessageSchema = z.object({
+  role: z.enum(['user', 'assistant']),
+  content: z.string().max(8000),
+});
+
+const BodySchema = z.object({
+  messages: z.array(MessageSchema).min(1).max(40),
+  context: z.record(z.string(), z.unknown()).optional(),
+  model: z.string().max(80).optional().default('claude-sonnet-4-6'),
+});
 
 export async function POST(req: Request) {
   try {
-    const { messages, context, model } = await req.json();
-
     if (!process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_API_KEY.length < 10) {
-      return NextResponse.json({ error: "Missing or invalid ANTHROPIC_API_KEY. Please check your environment variables." }, { status: 401 });
+      return NextResponse.json({ error: 'Missing or invalid ANTHROPIC_API_KEY.' }, { status: 401 });
     }
 
-    const systemPrompt = `You are Parcelis, the PropertyVision assistant for real estate and architectural analysis.
+    const raw = await req.json();
+    const parsed = BodySchema.safeParse(raw);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.issues[0]?.message ?? 'Invalid request' }, { status: 400 });
+    }
+    const { messages, context, model } = parsed.data;
+
+    const systemPrompt = `You are Parcelis, the AtlasLayer assistant for real estate and architectural analysis.
 You are helping a user analyze a specific property parcel.
 
 CONTEXT:
@@ -31,38 +46,33 @@ JSON SCHEMA MUST EXACTLY MATCH THIS:
     "data": [{"name": "Label", "value": 100}],
     "xAxisKey": "name",
     "yAxisKey": "value"
-  } // Include ONLY if asked for a visual/graph
+  }
 }`;
 
+    const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
     const response = await anthropic.messages.create({
-      model: model || 'claude-sonnet-4-6',
-      max_tokens: 500, // Reduced from 1000 to save API credits
-      temperature: 0.2, // Lower temperature for more structured, deterministic JSON
+      model,
+      max_tokens: 500,
+      temperature: 0.2,
       system: systemPrompt,
-      messages: messages.map((m: any) => ({
-        role: m.role,
-        content: m.content
-      }))
+      messages,
     });
 
-    const rawReply = response.content[0].type === 'text' ? response.content[0].text.trim() : "{}";
+    const rawReply = response.content[0].type === 'text' ? response.content[0].text.trim() : '{}';
     const cleanReply = rawReply.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
-    
-    let parsedReply;
+
+    let parsedReply: { text: string; graph?: unknown };
     try {
       parsedReply = JSON.parse(cleanReply);
-      // Ensure 'text' exists at minimum
-      if (!parsedReply.text) {
-        parsedReply = { text: "Error: Received empty response." };
-      }
-    } catch (e) {
-      console.error("Failed to parse JSON from AI", cleanReply);
-      parsedReply = { text: cleanReply }; // Fallback to raw text if JSON parsing fails
+      if (!parsedReply.text) parsedReply = { text: 'Error: Received empty response.' };
+    } catch {
+      parsedReply = { text: cleanReply };
     }
 
     return NextResponse.json({ reply: JSON.stringify(parsedReply) });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Parcelis Chat Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    const msg = error instanceof Error ? error.message : 'Chat failed';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }
