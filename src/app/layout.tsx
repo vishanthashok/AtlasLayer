@@ -8,9 +8,9 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "PropertyVision — Parcelis & Fieldstone",
+  title: "AtlasLayer — Land Intelligence Platform",
   description:
-    "PropertyVision unifies Parcelis for real-estate parcel intelligence and Fieldstone for agricultural land analytics.",
+    "AtlasLayer unifies Parcelis for real-estate parcel intelligence, Fieldstone for agricultural land analytics, and ConflictLens for geopolitical risk.",
 };
 
 export default function RootLayout({

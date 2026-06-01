@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
-// Force reload: 2026-05-02T14:50:00Z
 import Anthropic from '@anthropic-ai/sdk';
 import * as crypto from 'crypto';
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
-const insightsCache: Record<string, any> = {};
+export const runtime = 'nodejs';
+export const maxDuration = 120;
+
+const insightsCache: Record<string, unknown> = {};
 
 // ── Soil texture classification from clay/sand %
 function classifySoil(clay: number, sand: number): string {
@@ -207,8 +208,9 @@ Based on this real-world data from NASA, ISRIC SoilGrids, and Open-Meteo, genera
 Return ONLY a raw JSON object, no markdown, no backticks:
 {"summary":"string","risks":["string","string","string"],"crops":["string","string","string"]}`;
 
-    let insightsResponse: any;
+    let insightsResponse: { summary: string; risks: string[]; crops: string[] } | undefined;
     try {
+      const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || '' });
       const msg = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 600,
@@ -231,8 +233,9 @@ Return ONLY a raw JSON object, no markdown, no backticks:
 
     return NextResponse.json({ stats: earthData, scores, riskScore: scores.risk, insights: insightsResponse, mode: 'deep' });
 
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error('Analyze error:', error);
-    return NextResponse.json({ error: error.message || 'Failed to analyze land' }, { status: 500 });
+    const msg = error instanceof Error ? error.message : 'Failed to analyze land';
+    return NextResponse.json({ error: msg }, { status: 500 });
   }
 }

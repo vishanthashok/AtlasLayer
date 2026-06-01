@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import { launchCadBrowser } from './launchBrowser';
 import type { CadScrapeResult } from '../cadScraper';
 import { configureCadPage, parseCadDetailPage, waitForRegistryContent } from './puppeteerShared';
 
@@ -9,10 +9,7 @@ export async function scrapeTravisCAD(address: string): Promise<CadScrapeResult 
   let browser;
   try {
     console.log(`[Travis CAD] Search: ${address.slice(0, 80)}...`);
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
-    });
+    browser = await launchCadBrowser();
     const page = await browser.newPage();
     await configureCadPage(page);
 

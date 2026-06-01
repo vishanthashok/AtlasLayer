@@ -14,7 +14,7 @@ import type { AIAnalysisResult } from '../../models/types';
 const ParcelisMap = dynamic(() => import('../../components/Parcelis/ParcelisMap'), { ssr: false });
 
 export default function ParcelisPage() {
-  const { selectedLand, setRecommendationList } = useStore();
+  const { selectedLand, setRecommendationList, aiModel, setAiModel } = useStore();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState<AIAnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -48,13 +48,13 @@ export default function ParcelisPage() {
           <ArrowLeft size={14} /> Back to Hub
         </Link>
         <div className={styles.titleBlock}>
-          <span className={styles.titleLabel}>PROPERTYVISION</span>
+          <span className={styles.titleLabel}>ATLASLAYER</span>
           <span className={styles.title}>Parcelis</span>
         </div>
         <div className={styles.modelSelector}>
-          <select 
-            value={useStore().aiModel} 
-            onChange={(e) => useStore.getState().setAiModel(e.target.value)}
+          <select
+            value={aiModel}
+            onChange={(e) => setAiModel(e.target.value)}
             className={styles.modelSelect}
           >
             <option value="claude-sonnet-4-6">Claude 4.6 Sonnet (Fast & Cost-Effective)</option>

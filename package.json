@@ -1,12 +1,12 @@
 {
-  "name": "propertyvision",
+  "name": "atlaslayer",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint src"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.92.0",
@@ -27,8 +27,9 @@
     "lucide-react": "^1.14.0",
     "mapbox-gl": "^3.23.0",
     "mapbox-gl-draw-rectangle-mode": "^1.0.4",
+    "@sparticuz/chromium": "^133.0.0",
     "next": "16.2.4",
-    "puppeteer": "^24.42.0",
+    "puppeteer-core": "^24.42.0",
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-map-gl": "^8.1.1",
@@ -52,6 +53,7 @@
     "@types/sentiment": "^5.0.4",
     "eslint": "^9",
     "eslint-config-next": "16.2.4",
+    "puppeteer": "^24.42.0",
     "tsx": "^4.21.0",
     "typescript": "^5"
   }

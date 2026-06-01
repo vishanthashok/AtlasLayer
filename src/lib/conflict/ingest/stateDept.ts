@@ -21,7 +21,7 @@ const LEVEL_PATTERNS: Array<[number, RegExp]> = [
 ];
 
 const USER_AGENT =
-  'PropertyVisionConflictLens/1.0 (+https://example.com; data ingestion bot)';
+  'AtlasLayerConflictLens/1.0 (+https://example.com; data ingestion bot)';
 
 interface RawAdvisory {
   countryName: string;

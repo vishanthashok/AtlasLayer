@@ -349,7 +349,7 @@ export default function ConflictPage() {
               color: '#5a6478',
             }}
           >
-            ← PropertyVision
+            ← AtlasLayer
           </Link>
           <div style={{ flex: 1, marginLeft: 16, marginRight: 16 }}>
             <ConflictFilterBar onRefresh={onRefresh} isRefreshing={refreshing || isLoading} />

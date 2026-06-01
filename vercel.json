@@ -3,7 +3,21 @@
   "crons": [
     {
       "path": "/api/conflict/refresh?step=all",
-      "schedule": "*/8 * * * *"
+      "schedule": "*/30 * * * *"
     }
-  ]
+  ],
+  "functions": {
+    "src/app/api/conflict/refresh/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/conflict/stream/route.ts": {
+      "maxDuration": 300
+    },
+    "src/app/api/parcelis/analyze/route.ts": {
+      "maxDuration": 120
+    },
+    "src/app/api/fieldstone/analyze/route.ts": {
+      "maxDuration": 120
+    }
+  }
 }

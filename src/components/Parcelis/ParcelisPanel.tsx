@@ -25,14 +25,6 @@ const STYLE_COLORS: Record<string, string> = {
   'Bungalow': '#ec4899',
 };
 
-// Supported Deep Search Counties
-const SUPPORTED_REGISTRIES: Record<string, { name: string, url: string }> = {
-  'Bexar': { name: 'Bexar CAD', url: 'https://bexar.trueautomation.com/clientdb/propertysearch.aspx?cid=110' },
-  'Travis': { name: 'Travis CAD', url: 'https://travis.prodigycad.com/property-search' },
-  'Williamson': { name: 'Williamson CAD', url: 'https://search.wcad.org/' },
-  'Bastrop': { name: 'Bastrop CAD', url: 'https://bastrop.trueautomation.com/clientdb/propertysearch.aspx?cid=94' },
-  'Hays': { name: 'Hays CAD', url: 'https://hays.trueautomation.com/clientdb/propertysearch.aspx?cid=91' }
-};
 
 function ScoreBar({ score }: { score: number }) {
   const pct = Math.round(score * 100);
@@ -86,8 +78,7 @@ function FloorPlanThumb({ model }: { model: HouseModel }) {
 export default function ParcelisPanel({ isAnalyzing, analysisResult, error }: Props) {
   const { selectedLand, recommendationList, selectedHouseModel, setSelectedHouseModel, viewMode, setViewMode } = useStore();
 
-  const currentCounty = analysisResult?.propertyIntelligence?.county?.replace(' County', '');
-  const registry = currentCounty ? SUPPORTED_REGISTRIES[currentCounty] : null;
+  const registry = analysisResult?.registryConnector ?? null;
 
   const exportToHTML = () => {
     if (!analysisResult) return;

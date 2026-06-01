@@ -9,6 +9,9 @@ import { parseJsonFromModelOutput } from '../../../../lib/property-intelligence/
 import type { IngestionBundle } from '../../../../lib/property-intelligence/connectors';
 import type { PropertyIntelligenceObject } from '../../../../lib/property-intelligence/ontology';
 
+export const runtime = 'nodejs';
+export const maxDuration = 120;
+
 const ANALYSIS_SCHEMA_VER = 'v2';
 
 function getRegistryConnector(streetAddress: string, cleanCounty: string | undefined) {

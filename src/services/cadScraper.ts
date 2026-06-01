@@ -1,4 +1,4 @@
-import puppeteer from 'puppeteer';
+import { launchCadBrowser } from './cad/launchBrowser';
 import { pickPuppeteerUserAgent } from '../lib/property-intelligence/constants';
 import {
   configureCadPage,
@@ -22,10 +22,7 @@ export async function scrapeBexarCAD(address: string): Promise<CadScrapeResult |
   let browser;
   try {
     console.log(`[Bexar CAD] Search: ${address.slice(0, 80)}...`);
-    browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
-    });
+    browser = await launchCadBrowser();
 
     const page = await browser.newPage();
     const ua = pickPuppeteerUserAgent();

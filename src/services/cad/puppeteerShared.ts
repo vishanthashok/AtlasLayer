@@ -1,4 +1,4 @@
-import type { Page } from 'puppeteer';
+import type { Page } from 'puppeteer-core';
 import { pickPuppeteerUserAgent } from '../../lib/property-intelligence/constants';
 
 /** Configure viewport + headers consistent across CAD portals. */

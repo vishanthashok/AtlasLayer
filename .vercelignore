@@ -1,0 +1,5 @@
+data_processing/
+mock_grid_data.csv
+scripts/
+*.md
+!README.md

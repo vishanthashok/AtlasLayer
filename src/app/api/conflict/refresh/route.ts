@@ -17,7 +17,12 @@ const SCHEMA_MISSING_HINT =
 
 function isAuthorized(req: Request): boolean {
   const secret = process.env.CRON_SECRET;
-  if (!secret) return true; // unset → permissive in dev only
+  if (!secret) {
+    // Fail-closed in production; allow in local dev only.
+    if (process.env.NODE_ENV !== 'production') return true;
+    console.warn('[refresh] CRON_SECRET not set — blocking request in production');
+    return false;
+  }
   const auth = req.headers.get('authorization') || '';
   if (auth === `Bearer ${secret}`) return true;
   const vercelHeader = req.headers.get('x-vercel-cron-authorization');

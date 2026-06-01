@@ -8,7 +8,7 @@ export default function LandingPage() {
   return (
     <div className={styles.container}>
       <header className={styles.header}>
-        <div className={styles.logo}>PropertyVision</div>
+        <div className={styles.logo}>AtlasLayer</div>
         <p className={styles.subtitle}>Unified intelligence for land — choose a product workspace</p>
       </header>
       

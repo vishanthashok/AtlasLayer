@@ -96,7 +96,7 @@ export default function FieldstonePage() {
           <ArrowLeft size={16} /> Back to Hub
         </Link>
         <div className={styles.titleBlock}>
-          <span className={styles.titleBrand}>PROPERTYVISION</span>
+          <span className={styles.titleBrand}>ATLASLAYER</span>
           <span className={styles.title}>Fieldstone</span>
         </div>
         
