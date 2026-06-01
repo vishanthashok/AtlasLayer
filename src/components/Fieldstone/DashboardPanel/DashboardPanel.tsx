@@ -5,6 +5,8 @@ import styles from './DashboardPanel.module.css';
 import { Download, AlertTriangle, Droplets, Thermometer, MapPin, Terminal, Send, BookmarkPlus, FolderOpen, ChevronDown, ChevronUp, Trash2, CheckCircle, Zap, FlaskConical, SlidersHorizontal, TrendingUp, TrendingDown } from 'lucide-react';
 import { jsPDF } from 'jspdf';
 import ReactMarkdown from 'react-markdown';
+import { EmptyState } from '../../ui/EmptyState';
+import { SkeletonPanel } from '../../ui/Skeleton';
 
 const FIELDSTONE_PORTFOLIO_KEY = 'fieldstone_portfolio';
 const LEGACY_AGRIMAP_PORTFOLIO_KEY = 'agrimap_portfolio';
@@ -149,7 +151,7 @@ export default function DashboardPanel({ hasPolygon, isAnalyzing, onAnalyze, res
       const pdf = new jsPDF('p', 'mm', 'a4');
       pdf.setFont("helvetica", "bold");
       pdf.setFontSize(22);
-      pdf.text("Fieldstone · PropertyVision Report", 20, 20);
+      pdf.text("Fieldstone · AtlasLayer Report", 20, 20);
       pdf.setFontSize(10);
       pdf.setFont("helvetica", "normal");
       pdf.text(`Generated: ${new Date().toLocaleString()} | Mode: ${result.mode?.toUpperCase() || 'DEEP'}`, 20, 28);
@@ -418,15 +420,19 @@ export default function DashboardPanel({ hasPolygon, isAnalyzing, onAnalyze, res
           {!result ? (
             <div className={styles.actionArea}>
               {!hasPolygon ? (
-                <div className={styles.emptyState}>
-                  <MapPin size={48} className={styles.emptyIcon} />
-                  <h3>Draw a Parcel</h3>
-                  <p>Use the polygon tool on the map to select a land area for analysis.</p>
-                </div>
+                <EmptyState
+                  variant="scan"
+                  icon={<MapPin size={32} />}
+                  title="No parcel drawn"
+                  body="Use the polygon tool on the map to select a land area for analysis."
+                />
               ) : (
-                <button className={styles.analyzeBtn} onClick={handleAnalyzeClick} disabled={isAnalyzing}>
-                  {isAnalyzing ? 'Processing...' : 'Run Analysis Pipeline'}
-                </button>
+                <>
+                  <button className={styles.analyzeBtn} onClick={handleAnalyzeClick} disabled={isAnalyzing}>
+                    {isAnalyzing ? 'Analyzing…' : 'Run Analysis Pipeline'}
+                  </button>
+                  {isAnalyzing && <SkeletonPanel />}
+                </>
               )}
             </div>
           ) : (

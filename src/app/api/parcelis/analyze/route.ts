@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { z } from 'zod';
+import { rateLimit, getClientId } from '../../../../lib/rateLimit';
 import { runAllConnectors } from '../../../../lib/property-intelligence/connectors';
 import { buildPropertyIntelligence, buildHazardProfile } from '../../../../lib/property-intelligence/ontology';
 import { buildQuantSystemPrompt, buildQuantUserPrompt } from '../../../../lib/property-intelligence/prompts';
@@ -111,6 +112,11 @@ function buildPropertyData(ontology: PropertyIntelligenceObject, bundle: Ingesti
 }
 
 export async function POST(req: Request) {
+  const rl = await rateLimit(`parcelis:${getClientId(req)}`, { limit: 20, windowSec: 60 });
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Try again shortly.' }, { status: 429 });
+  }
+
   try {
     const raw = await req.json();
     const parsed = BodySchema.safeParse(raw);

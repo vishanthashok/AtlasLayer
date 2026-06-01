@@ -10,6 +10,8 @@ import {
   Droplets, ListOrdered,
 } from 'lucide-react';
 import ParcelisChat from './ParcelisChat';
+import { SkeletonPanel } from '../ui/Skeleton';
+import { EmptyState } from '../ui/EmptyState';
 
 interface Props {
   isAnalyzing: boolean;
@@ -86,7 +88,7 @@ export default function ParcelisPanel({ isAnalyzing, analysisResult, error }: Pr
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Parcelis Export · PropertyVision — ${analysisResult.propertyIntelligence?.address || 'Report'}</title>
+        <title>Parcelis Export · AtlasLayer — ${analysisResult.propertyIntelligence?.address || 'Report'}</title>
         <style>
           body { font-family: 'Inter', sans-serif; background: #0b0f15; color: #c8d6e8; padding: 40px; }
           .card { background: rgba(74, 158, 255, 0.04); border: 1px solid rgba(74, 158, 255, 0.15); padding: 20px; border-radius: 8px; margin-bottom: 20px; }
@@ -183,10 +185,12 @@ export default function ParcelisPanel({ isAnalyzing, analysisResult, error }: Pr
       </div>
 
       {!selectedLand ? (
-        <div className={styles.emptyState}>
-          <MapPin size={22} className={styles.emptyIcon} />
-          <p>Click any location on the map to drop a pin and load parcel data.</p>
-        </div>
+        <EmptyState
+          variant="scan"
+          icon={<MapPin size={32} />}
+          title="No parcel selected"
+          body="Click any location on the map to drop a pin and begin intelligence analysis."
+        />
       ) : (
         <div className={styles.parcelCard}>
           <div className={styles.parcelRow}>
@@ -223,11 +227,7 @@ export default function ParcelisPanel({ isAnalyzing, analysisResult, error }: Pr
           </div>
 
           {isAnalyzing ? (
-            <div className={styles.loadingBlock}>
-              <div className={styles.scanLine} />
-              <Cpu size={14} className={styles.loadingIcon} />
-              <span>Fetching Census · OSM · USGS · FEMA · RentCast · CAD · AI analysis...</span>
-            </div>
+            <SkeletonPanel />
           ) : analysisResult && (
             <div className={styles.insightBlock}>
 

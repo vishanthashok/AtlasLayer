@@ -3,6 +3,7 @@ import Anthropic from '@anthropic-ai/sdk';
 import * as crypto from 'crypto';
 import { z } from 'zod';
 import { cacheGet, cacheSet } from '../../../../lib/property-intelligence/cache';
+import { rateLimit, getClientId } from '../../../../lib/rateLimit';
 
 export const runtime = 'nodejs';
 export const maxDuration = 120;
@@ -56,6 +57,11 @@ function computeScores(data: any) {
 }
 
 export async function POST(req: Request) {
+  const rl = await rateLimit(`fieldstone:${getClientId(req)}`, { limit: 20, windowSec: 60 });
+  if (!rl.allowed) {
+    return NextResponse.json({ error: 'Rate limit exceeded. Try again shortly.' }, { status: 429 });
+  }
+
   try {
     const raw = await req.json();
     const parsed = BodySchema.safeParse(raw);

@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { rateLimit, getClientId } from '../../../../lib/rateLimit';
 import { fetchAllAdvisories } from '../../../../lib/conflict/ingest/stateDept';
 import { ingestAllNews } from '../../../../lib/conflict/ingest/news';
 import { fetchRedditSignals } from '../../../../lib/conflict/ingest/social';
@@ -104,6 +105,18 @@ async function runStep(step: Step): Promise<unknown> {
 async function handle(req: Request) {
   if (!isAuthorized(req)) {
     return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+  // Rate-limit manual triggers (cron calls are pre-authorized via secret)
+  const secret = process.env.CRON_SECRET;
+  const isCron = secret && (
+    req.headers.get('authorization') === `Bearer ${secret}` ||
+    req.headers.get('x-vercel-cron-authorization') === secret
+  );
+  if (!isCron) {
+    const rl = await rateLimit(`conflict_refresh:${getClientId(req)}`, { limit: 4, windowSec: 300 });
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Rate limit exceeded.' }, { status: 429 });
+    }
   }
   const url = new URL(req.url);
   const stepRaw = (url.searchParams.get('step') ?? 'all').toLowerCase();
