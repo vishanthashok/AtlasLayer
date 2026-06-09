@@ -1,6 +1,6 @@
 import { HouseModel } from '../models/types';
 
-export const MOCK_HOUSE_MODELS: HouseModel[] = [
+export const HOUSE_MODELS: HouseModel[] = [
   { id: 'h1', name: 'The Aspen', styleType: 'Modern Townhome', footprintDimensions: { width: 30, depth: 60 }, description: 'Sleek, narrow footprint perfect for urban infill.' },
   { id: 'h2', name: 'Oakridge Ranch', styleType: 'Ranch', footprintDimensions: { width: 60, depth: 40 }, description: 'Spacious single-story living with wide front facade.' },
   { id: 'h3', name: 'Heritage Colonial', styleType: 'Colonial', footprintDimensions: { width: 45, depth: 45 }, description: 'Classic two-story design with symmetric proportions.' },
@@ -14,7 +14,5 @@ export const MOCK_HOUSE_MODELS: HouseModel[] = [
 ];
 
 export async function fetchHouseModels(): Promise<HouseModel[]> {
-  // Simulate network
-  await new Promise(resolve => setTimeout(resolve, 500));
-  return MOCK_HOUSE_MODELS;
+  return HOUSE_MODELS;
 }

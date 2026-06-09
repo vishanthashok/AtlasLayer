@@ -19,8 +19,7 @@ const ANALYSIS_SCHEMA_VER = 'v2';
 
 const ALLOWED_MODELS = [
   'claude-sonnet-4-6',
-  'claude-opus-4-7',
-  'claude-haiku-4-5',
+  'claude-opus-4-8',
   'claude-haiku-4-5-20251001',
   'gemini-1.5-flash',
   'gemini-1.5-pro',

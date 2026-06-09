@@ -22,10 +22,6 @@ export default function ParcelisPage() {
 
   const handleAnalyze = async () => {
     if (!selectedLand) return;
-    const addr = selectedLand.address?.trim() || '';
-    if (addr) {
-      window.open(`/property?address=${encodeURIComponent(addr)}`, '_blank');
-    }
     setIsAnalyzing(true);
     setAnalysisResult(null);
     setError(null);
@@ -58,9 +54,9 @@ export default function ParcelisPage() {
             onChange={(e) => setAiModel(e.target.value)}
             className={styles.modelSelect}
           >
-            <option value="claude-sonnet-4-6">Claude 4.6 Sonnet (Fast & Cost-Effective)</option>
-            <option value="claude-opus-4-7">Claude 4.7 Opus (Deep Reasoning)</option>
-            <option value="claude-haiku-4-5">Claude 4.5 Haiku (High Speed)</option>
+            <option value="claude-sonnet-4-6">Claude Sonnet 4.6 (Fast & Cost-Effective)</option>
+            <option value="claude-opus-4-8">Claude Opus 4.8 (Deep Reasoning)</option>
+            <option value="claude-haiku-4-5-20251001">Claude Haiku 4.5 (High Speed)</option>
           </select>
         </div>
         <div className={styles.statusDot} />
